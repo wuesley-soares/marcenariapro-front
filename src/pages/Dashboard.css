@@ -1,0 +1,119 @@
+.dashboard-header {
+  margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  color: #222;
+  font-size: 28px;
+}
+
+.dashboard-header p {
+  margin-top: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.dashboard-card {
+  background-color: white;
+  padding: 22px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.dashboard-card span {
+  display: block;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.dashboard-card strong {
+  display: block;
+  color: #2f6fed;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.dashboard-section {
+  margin-top: 30px;
+  background-color: white;
+  padding: 22px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.dashboard-section h2 {
+  margin: 0 0 20px;
+  font-size: 18px;
+  color: #222;
+}
+
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 15px;
+  background-color: #f7f8fa;
+  border-radius: 6px;
+}
+
+.status-item span {
+  color: #555;
+}
+
+.status-item strong {
+  color: #2f6fed;
+}
+
+.estoque-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.estoque-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 15px;
+  background-color: #f7f8fa;
+  border-radius: 6px;
+}
+
+.estoque-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.estoque-item strong {
+  color: #333;
+}
+
+.estoque-item span {
+  color: #666;
+  font-size: 13px;
+}
+
+.estoque-alerta {
+  color: #d32f2f !important;
+  font-weight: 600;
+}
+
+.estoque-ok {
+  color: #666;
+  margin: 0;
+}

@@ -1,0 +1,279 @@
+.estoque {
+  padding: 30px;
+}
+
+.estoque-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.estoque-header h1 {
+  margin: 0;
+  color: #222;
+}
+
+.estoque-header p {
+  margin-top: 6px;
+  color: #777;
+}
+
+.estoque-header-botoes {
+  display: flex;
+  gap: 10px;
+}
+
+.botao-novo,
+.botao-movimentacao {
+  border: none;
+  border-radius: 6px;
+  padding: 11px 18px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.botao-novo {
+  background: #2f6fed;
+  color: white;
+}
+
+.botao-movimentacao {
+  background: white;
+  color: #2f6fed;
+  border: 1px solid #2f6fed;
+}
+
+.botao-novo:hover {
+  background: #245dcc;
+}
+
+.botao-movimentacao:hover {
+  background: #f1f5ff;
+}
+
+.estoque-formulario {
+  background: white;
+  border: 1px solid #e1e5eb;
+  border-radius: 8px;
+  padding: 25px;
+  margin-bottom: 25px;
+}
+
+.estoque-formulario h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+}
+
+.campo label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #444;
+}
+
+.campo input,
+.campo textarea,
+.campo select {
+  border: 1px solid #d5d9df;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+}
+
+.campo input:focus,
+.campo textarea:focus,
+.campo select:focus {
+  border-color: #2f6fed;
+}
+
+.campo input:disabled {
+  background: #f2f3f5;
+  cursor: not-allowed;
+}
+
+.campos-linha {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 18px;
+}
+
+.aviso-estoque {
+  background: #f1f5ff;
+  border-left: 4px solid #2f6fed;
+  padding: 12px;
+  font-size: 13px;
+  color: #555;
+}
+
+.formulario-botoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.formulario-botoes button {
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+
+.formulario-botoes button[type='button'] {
+  background: #e9ecef;
+  color: #333;
+}
+
+.formulario-botoes button[type='submit'] {
+  background: #2f6fed;
+  color: white;
+}
+
+.estoque-resumo {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.resumo-card {
+  background: white;
+  border: 1px solid #e1e5eb;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.resumo-card span {
+  display: block;
+  color: #777;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.resumo-card strong {
+  font-size: 25px;
+  color: #222;
+}
+
+.estoque-tabela {
+  background: white;
+  border: 1px solid #e1e5eb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 25px;
+  overflow-x: auto;
+}
+
+.estoque-tabela h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.estoque-tabela table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.estoque-tabela th {
+  background: #f7f8fa;
+  color: #555;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  padding: 13px;
+  border-bottom: 1px solid #e1e5eb;
+}
+
+.estoque-tabela td {
+  padding: 13px;
+  border-bottom: 1px solid #edf0f3;
+  color: #444;
+  font-size: 14px;
+}
+
+.estoque-tabela tr:last-child td {
+  border-bottom: none;
+}
+
+.acoes {
+  display: flex;
+  gap: 7px;
+}
+
+.botao-editar,
+.botao-excluir {
+  border: none;
+  border-radius: 5px;
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.botao-editar {
+  background: #eef4ff;
+  color: #2f6fed;
+}
+
+.botao-excluir {
+  background: #fff0f0;
+  color: #d93025;
+}
+
+.status-normal,
+.status-baixo,
+.tipo-entrada,
+.tipo-saida {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-normal {
+  background: #eaf7ee;
+  color: #218739;
+}
+
+.status-baixo {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.tipo-entrada {
+  background: #eaf7ee;
+  color: #218739;
+}
+
+.tipo-saida {
+  background: #fff0f0;
+  color: #d93025;
+}
+
+@media (max-width: 900px) {
+  .estoque-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .campos-linha {
+    flex-direction: column;
+  }
+
+  .estoque-resumo {
+    grid-template-columns: 1fr;
+  }
+}

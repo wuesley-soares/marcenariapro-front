@@ -1,0 +1,185 @@
+.ambientes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.ambientes-header h1 {
+  margin: 0;
+  color: #222;
+}
+
+.ambientes-header p {
+  margin-top: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.ambientes-header-botoes {
+  display: flex;
+  gap: 10px;
+}
+
+.ambientes-header button {
+  padding: 11px 18px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.botao-voltar {
+  background-color: #e5e7eb;
+  color: #333;
+}
+
+.botao-voltar:hover {
+  background-color: #d1d5db;
+}
+
+.botao-novo {
+  background-color: #2f6fed;
+  color: white;
+}
+
+.botao-novo:hover {
+  background-color: #255dcc;
+}
+
+.ambiente-formulario {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 25px;
+  margin-bottom: 25px;
+}
+
+.ambiente-formulario h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #222;
+  font-size: 20px;
+}
+
+.ambiente-formulario form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.ambiente-formulario label {
+  display: block;
+  margin-bottom: 6px;
+  color: #444;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.ambiente-formulario input,
+.ambiente-formulario textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+}
+
+.ambiente-formulario input:focus,
+.ambiente-formulario textarea:focus {
+  border-color: #2f6fed;
+  box-shadow: 0 0 0 2px rgba(47, 111, 237, 0.1);
+}
+
+.campo-descricao {
+  grid-column: 1 / -1;
+}
+
+.formulario-botoes {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.formulario-botoes button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.formulario-botoes button[type="button"] {
+  background-color: #e5e7eb;
+  color: #333;
+}
+
+.formulario-botoes button[type="submit"] {
+  background-color: #2f6fed;
+  color: white;
+}
+
+.ambientes-tabela {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ambientes-tabela table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ambientes-tabela th,
+.ambientes-tabela td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.ambientes-tabela th {
+  background-color: #f7f8fa;
+  color: #555;
+  font-size: 14px;
+}
+
+.ambientes-tabela td {
+  color: #333;
+  font-size: 14px;
+}
+
+.acoes {
+  display: flex;
+  gap: 8px;
+}
+
+.acoes button {
+  padding: 7px 12px;
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.botao-editar {
+  background-color: #e8f0ff;
+  color: #2f6fed;
+}
+
+.botao-editar:hover {
+  background-color: #d7e4ff;
+}
+
+.botao-excluir {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.botao-excluir:hover {
+  background-color: #fecaca;
+}
