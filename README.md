@@ -149,6 +149,21 @@ Para visualizar a versão compilada localmente, execute:
 ```bash
 npm run preview
 ```
+## 🔐 Acesso para testes
+
+Para testar o sistema, utilize as credenciais abaixo:
+
+| Campo | Valor |
+|---|---|
+| **E-mail** | `admin@marcenariapro.com` |
+| **Senha** | `123456` |
+| **Perfil** | Administrador |
+
+**Observações:**
+- Essas credenciais são destinadas exclusivamente à avaliação e aos testes do sistema.
+- Se o sistema estiver sendo executado localmente, inicie o backend e o frontend antes de acessar a tela de login.
+- Se o acesso for feito por uma versão publicada na nuvem, utilize o endereço disponibilizado para avaliação.
+
 
 ## Execução do backend
 
