@@ -11,6 +11,7 @@ function Projetos() {
   const [clientes, setClientes] = useState([])
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [projetoEditando, setProjetoEditando] = useState(null)
+  const [pesquisa, setPesquisa] = useState('')
 
   const [formulario, setFormulario] = useState({
     nome: '',
@@ -142,6 +143,24 @@ function Projetos() {
     }
   }
 
+  const projetosFiltrados = projetos.filter((projeto) => {
+  const termo = pesquisa.toLowerCase().trim()
+
+  const nomeCliente =
+    projeto.cliente?.nome ||
+    clientes.find(
+      (cliente) =>
+        cliente.id === (projeto.cliente?.id ?? projeto.clienteId)
+    )?.nome ||
+    ''
+
+  return (
+    projeto.nome?.toLowerCase().includes(termo) ||
+    projeto.descricao?.toLowerCase().includes(termo) ||
+    nomeCliente.toLowerCase().includes(termo)
+  )
+})
+
   return (
     <div className="projetos">
       <div className="projetos-header">
@@ -228,72 +247,102 @@ function Projetos() {
       )}
 
       <div className="projetos-tabela">
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Cliente</th>
-              <th>Descrição</th>
-              <th>Ações</th>
+  <div className="projetos-tabela-header">
+    <div>
+      <h2>Projetos cadastrados</h2>
+      <span>
+        {projetosFiltrados.length}{' '}
+        {projetosFiltrados.length === 1
+          ? 'projeto encontrado'
+          : 'projetos encontrados'}
+      </span>
+    </div>
+
+    <div className="projetos-pesquisa">
+      <input
+        type="text"
+        placeholder="Pesquisar por nome, cliente ou descrição..."
+        value={pesquisa}
+        onChange={(event) => setPesquisa(event.target.value)}
+      />
+    </div>
+  </div>
+
+  {projetosFiltrados.length === 0 ? (
+    <div className="projetos-vazio">
+      <h3>
+        {projetos.length === 0
+          ? 'Nenhum projeto cadastrado'
+          : 'Nenhum projeto encontrado'}
+      </h3>
+      <p>
+        {projetos.length === 0
+          ? 'Cadastre um novo projeto para começar.'
+          : 'Tente pesquisar por outro nome, cliente ou descrição.'}
+      </p>
+    </div>
+  ) : (
+    <div className="tabela-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Cliente</th>
+            <th>Descrição</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {projetosFiltrados.map((projeto) => (
+            <tr key={projeto.id}>
+              <td>{projeto.nome}</td>
+
+              <td>
+                {projeto.cliente?.nome ||
+                  clientes.find(
+                    (cliente) =>
+                      cliente.id ===
+                      (projeto.cliente?.id ?? projeto.clienteId)
+                  )?.nome ||
+                  '-'}
+              </td>
+
+              <td>{projeto.descricao || '-'}</td>
+
+              <td>
+                <div className="acoes">
+                  <button
+                    className="botao-editar"
+                    onClick={() => editarProjeto(projeto)}
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    className="botao-excluir"
+                    onClick={() => excluirProjeto(projeto.id)}
+                  >
+                    Excluir
+                  </button>
+
+                  <button
+                    className="botao-abrir"
+                    onClick={() =>
+                      navigate(`/projetos/${projeto.id}/ambientes`)
+                    }
+                  >
+                    Ambientes
+                  </button>
+                </div>
+              </td>
             </tr>
-          </thead>
-
-          <tbody>
-            {projetos.map((projeto) => (
-              <tr key={projeto.id}>
-                <td>{projeto.nome}</td>
-
-                <td>
-                  {projeto.cliente?.nome ||
-                    clientes.find(
-                      (cliente) =>
-                        cliente.id ===
-                        (projeto.cliente?.id ?? projeto.clienteId)
-                    )?.nome ||
-                    '-'}
-                </td>
-
-                <td>{projeto.descricao || '-'}</td>
-
-                <td>
-                  <div className="acoes">
-                    <button
-                      className="botao-editar"
-                      onClick={() => editarProjeto(projeto)}
-                    >
-                      Editar
-                    </button>
-
-                    <button
-                      className="botao-excluir"
-                      onClick={() => excluirProjeto(projeto.id)}
-                    >
-                      Excluir
-                    </button>
-
-                    <button
-                      className="botao-abrir"
-                      onClick={() =>
-                        navigate(`/projetos/${projeto.id}/ambientes`)
-                      }
-                    >
-                      Ambientes
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-
-            {projetos.length === 0 && (
-              <tr>
-                <td colSpan="4">
-                  Nenhum projeto cadastrado.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
     </div>
   )
 }

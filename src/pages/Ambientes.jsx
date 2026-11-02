@@ -1,17 +1,18 @@
+
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../services/api'
 import './Ambientes.css'
 
-
 function Ambientes() {
   const { projetoId } = useParams()
   const navigate = useNavigate()
 
-
   const [ambientes, setAmbientes] = useState([])
+  const [nomeProjeto, setNomeProjeto] = useState('')
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [ambienteEditando, setAmbienteEditando] = useState(null)
+  const [pesquisa, setPesquisa] = useState('')
 
   const [formulario, setFormulario] = useState({
     nome: '',
@@ -19,8 +20,18 @@ function Ambientes() {
   })
 
   useEffect(() => {
+    carregarProjeto()
     carregarAmbientes()
-  }, [])
+  }, [projetoId])
+
+  async function carregarProjeto() {
+    try {
+      const resposta = await api.get(`/projetos/${projetoId}`)
+      setNomeProjeto(resposta.data.nome || '')
+    } catch (error) {
+      console.error('Erro ao carregar projeto:', error)
+    }
+  }
 
   async function carregarAmbientes() {
     try {
@@ -134,13 +145,25 @@ function Ambientes() {
     }
   }
 
+  const ambientesFiltrados = ambientes.filter((ambiente) => {
+  const termo = pesquisa.toLowerCase().trim()
+
+  return (
+    ambiente.nome?.toLowerCase().includes(termo) ||
+    ambiente.descricao?.toLowerCase().includes(termo)
+  )
+})
+
   return (
     <div className="ambientes">
 
       <div className="ambientes-header">
         <div>
           <h1>Ambientes</h1>
-          <p>Ambientes cadastrados neste projeto</p>
+          <p>
+            Ambientes cadastrados no projeto{' '}
+            {nomeProjeto || '...'}
+          </p>
         </div>
 
         <div className="ambientes-header-botoes">
@@ -218,70 +241,91 @@ function Ambientes() {
       )}
 
       <div className="ambientes-tabela">
+  <div className="ambientes-tabela-header">
+    <div>
+      <h2>Ambientes cadastrados</h2>
+      <span>
+        {ambientesFiltrados.length}{' '}
+        {ambientesFiltrados.length === 1
+          ? 'ambiente encontrado'
+          : 'ambientes encontrados'}
+      </span>
+    </div>
 
-        <table>
+    <div className="ambientes-pesquisa">
+      <input
+        type="text"
+        placeholder="Pesquisar por nome ou descrição..."
+        value={pesquisa}
+        onChange={(event) => setPesquisa(event.target.value)}
+      />
+    </div>
+  </div>
 
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Descrição</th>
-              <th>Ações</th>
+  {ambientesFiltrados.length === 0 ? (
+    <div className="ambientes-vazio">
+      <h3>
+        {ambientes.length === 0
+          ? 'Nenhum ambiente cadastrado'
+          : 'Nenhum ambiente encontrado'}
+      </h3>
+      <p>
+        {ambientes.length === 0
+          ? 'Cadastre um novo ambiente para começar.'
+          : 'Tente pesquisar por outro nome ou descrição.'}
+      </p>
+    </div>
+  ) : (
+    <div className="tabela-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Descrição</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {ambientesFiltrados.map((ambiente) => (
+            <tr key={ambiente.id}>
+              <td>{ambiente.nome}</td>
+
+              <td>{ambiente.descricao || '-'}</td>
+
+              <td>
+                <div className="acoes">
+                  <button
+                    className="botao-editar"
+                    onClick={() => editarAmbiente(ambiente)}
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    className="botao-excluir"
+                    onClick={() => excluirAmbiente(ambiente.id)}
+                  >
+                    Excluir
+                  </button>
+
+                  <button
+                    className="botao-abrir"
+                    onClick={() =>
+                      navigate(`/ambientes/${ambiente.id}/orcamentos`)
+                    }
+                  >
+                    Orçamento
+                  </button>
+                </div>
+              </td>
             </tr>
-          </thead>
-
-          <tbody>
-
-            {ambientes.map((ambiente) => (
-              <tr key={ambiente.id}>
-
-                <td>{ambiente.nome}</td>
-
-                <td>
-                  {ambiente.descricao || '-'}
-                </td>
-
-                <td>
-                  <div className="acoes">
-
-                    <button
-                      className="botao-editar"
-                      onClick={() =>
-                        editarAmbiente(ambiente)
-                      }
-                    >
-                      Editar
-                    </button>
-
-                    <button
-                      className="botao-excluir"
-                      onClick={() =>
-                        excluirAmbiente(ambiente.id)
-                      }
-                    >
-                      Excluir
-                    </button>
-
-
-                    <button
-  className="botao-abrir"
-  onClick={() =>
-    navigate(`/ambientes/${ambiente.id}/orcamentos`)
-  }
->
-  Orçamento
-</button>
-
-                  </div>
-                </td>
-
-              </tr>
-            ))}
-
-          </tbody>
-
-        </table>
-
-      </div>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
 
     </div>
   )

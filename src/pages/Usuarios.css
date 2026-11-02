@@ -421,3 +421,124 @@
 }
 
 }
+
+.usuario-input-senha {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  background-color: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.usuario-input-senha:focus-within {
+  border-color: #2f6fed;
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.12);
+}
+
+.usuario-input-senha input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.usuario-input-senha input:focus {
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.usuario-input-senha button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: #667085;
+  cursor: pointer;
+}
+
+.usuario-input-senha button:hover {
+  color: #2f6fed;
+}
+
+.usuario-input-senha button:focus-visible {
+  outline: 2px solid #2f6fed;
+  border-radius: 4px;
+}
+
+.usuario-input-senha {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.usuario-input-senha input {
+  width: 100%;
+  padding-right: 45px;
+}
+
+.usuario-input-senha button {
+  position: absolute;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border: none;
+  background: transparent;
+  color: #667085;
+  cursor: pointer;
+}
+
+.usuario-input-senha button:hover {
+  color: #2f6fed;
+}
+
+.usuarios-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.usuarios-pesquisa {
+  width: 100%;
+  max-width: 350px;
+}
+
+.usuarios-pesquisa input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #dce1e8;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.usuarios-pesquisa input:focus {
+  border-color: #2f6fed;
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.1);
+}
+
+.usuarios-pesquisa input::placeholder {
+  color: #9ca3af;
+}
+
+@media (max-width: 600px) {
+  .usuarios-pesquisa {
+    max-width: 100%;
+  }
+}
+

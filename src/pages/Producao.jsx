@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import './Producao.css'
@@ -6,6 +7,7 @@ function Producao() {
   const [producoes, setProducoes] = useState([])
   const [pedidos, setPedidos] = useState([])
   const [materiais, setMateriais] = useState([])
+  const [orcamentos, setOrcamentos] = useState([])
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [mostrarMateriais, setMostrarMateriais] = useState(false)
@@ -14,6 +16,7 @@ function Producao() {
   const [producaoSelecionada, setProducaoSelecionada] = useState(null)
 
   const [itensProducao, setItensProducao] = useState([])
+  const [pesquisa, setPesquisa] = useState('')
 
   const [form, setForm] = useState({
     status: 'AGUARDANDO',
@@ -31,18 +34,22 @@ function Producao() {
 
   async function carregarDados() {
     try {
-      const [producoesResponse, pedidosResponse, materiaisResponse] =
-        await Promise.all([
-          api.get('/producoes'),
-          api.get('/pedidos'),
-          api.get('/materiais')
-        ])
-
-      
+      const [
+        producoesResponse,
+        pedidosResponse,
+        materiaisResponse,
+        orcamentosResponse
+      ] = await Promise.all([
+        api.get('/producoes'),
+        api.get('/pedidos'),
+        api.get('/materiais'),
+        api.get('/orcamentos')
+      ])
 
       setProducoes(producoesResponse.data)
       setPedidos(pedidosResponse.data)
       setMateriais(materiaisResponse.data)
+      setOrcamentos(orcamentosResponse.data)
     } catch (error) {
       console.error(error)
       alert('Erro ao carregar os dados.')
@@ -148,9 +155,7 @@ function Producao() {
     } catch (error) {
       console.error(error)
 
-      alert(
-        'Erro ao carregar os materiais da produção.'
-      )
+      alert('Erro ao carregar os materiais da produção.')
     }
   }
 
@@ -203,41 +208,40 @@ function Producao() {
     }
   }
 
-
   async function removerMaterial(itemId) {
-  if (!producaoSelecionada) {
-    return
+    if (!producaoSelecionada) {
+      return
+    }
+
+    if (
+      !window.confirm(
+        'Deseja realmente remover este material da produção?'
+      )
+    ) {
+      return
+    }
+
+    try {
+      await api.delete(
+        `/producoes/${producaoSelecionada.id}/materiais/${itemId}`
+      )
+
+      const response = await api.get(
+        `/producoes/${producaoSelecionada.id}/materiais`
+      )
+
+      setItensProducao(response.data)
+
+      alert('Material removido com sucesso!')
+    } catch (error) {
+      console.error(error)
+
+      alert(
+        error.response?.data?.message ||
+          'Não foi possível remover o material.'
+      )
+    }
   }
-
-  if (
-    !window.confirm(
-      'Deseja realmente remover este material da produção?'
-    )
-  ) {
-    return
-  }
-
-  try {
-    await api.delete(
-      `/producoes/${producaoSelecionada.id}/materiais/${itemId}`
-    )
-
-    const response = await api.get(
-      `/producoes/${producaoSelecionada.id}/materiais`
-    )
-
-    setItensProducao(response.data)
-
-    alert('Material removido com sucesso!')
-  } catch (error) {
-    console.error(error)
-
-    alert(
-      error.response?.data?.message ||
-        'Não foi possível remover o material.'
-    )
-  }
-}
 
   function fecharMateriais() {
     setMostrarMateriais(false)
@@ -264,6 +268,51 @@ function Producao() {
 
     return new Date(data).toLocaleString('pt-BR')
   }
+
+  // Localiza o orçamento relacionado ao pedido
+  function encontrarOrcamentoDoPedido(pedidoId) {
+    const pedido = pedidos.find(
+      (item) => Number(item.id) === Number(pedidoId)
+    )
+
+    if (!pedido) {
+      return null
+    }
+
+    return orcamentos.find(
+      (item) => Number(item.id) === Number(pedido.orcamentoId)
+    )
+  }
+
+  // Retorna o nome do projeto e do ambiente do pedido
+  function nomeProjetoAmbiente(pedidoId) {
+    const orcamento = encontrarOrcamentoDoPedido(pedidoId)
+
+    if (!orcamento) {
+      return 'Orçamento não encontrado'
+    }
+
+    const projeto = orcamento.projetoNome || 'Projeto não informado'
+    const ambiente = orcamento.ambienteNome || 'Ambiente não informado'
+
+    return `${projeto} - ${ambiente}`
+  }
+
+  // Pesquisa por projeto, ambiente, status, IDs e valor
+  const producoesFiltradas = producoes.filter((producao) => {
+    const termo = pesquisa.toLowerCase().trim()
+    const orcamento = encontrarOrcamentoDoPedido(producao.pedidoId)
+    const nome = nomeProjetoAmbiente(producao.pedidoId)
+    const status = traduzirStatus(producao.status)
+
+    return (
+      nome.toLowerCase().includes(termo) ||
+      status.toLowerCase().includes(termo) ||
+      String(producao.id).includes(termo) ||
+      String(producao.pedidoId).includes(termo) ||
+      String(orcamento?.valor ?? '').includes(termo)
+    )
+  })
 
   return (
     <div className="producao">
@@ -314,25 +363,20 @@ function Producao() {
                   Selecione um pedido
                 </option>
 
-                  {pedidos
-                    .filter(
-                      (pedido) =>
-                        pedido.status !== 'ENTREGUE' &&
-                        pedido.status !== 'CANCELADO'
-                    )
-                    .map((pedido) => (
-                      <option
-                        key={pedido.id}
-                        value={pedido.id}
-                      >
-                        {`Pedido #${pedido.id} - ${
-                          pedido.cliente?.nome ||
-                          pedido.orcamento?.projeto?.nome ||
-                          pedido.projeto?.nome ||
-                          'Nome não informado'
-                        }`}
-                      </option>
-                    ))}
+                {pedidos
+                  .filter(
+                    (pedido) =>
+                      pedido.status !== 'ENTREGUE' &&
+                      pedido.status !== 'CANCELADO'
+                  )
+                  .map((pedido) => (
+                    <option
+                      key={pedido.id}
+                      value={pedido.id}
+                    >
+                      Pedido #{pedido.id} - {nomeProjetoAmbiente(pedido.id)}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -396,12 +440,30 @@ function Producao() {
 
       <div className="producao-tabela">
 
-        <table>
+        <div className="producao-tabela-header">
+          <div>
+            <h2>Produções cadastradas</h2>
 
+            <span>
+              {producoesFiltradas.length} produção(ões) encontrada(s)
+            </span>
+          </div>
+
+          <div className="producao-pesquisa">
+            <input
+              type="text"
+              placeholder="Pesquisar por projeto, ambiente, status ou valor..."
+              value={pesquisa}
+              onChange={(e) => setPesquisa(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Pedido</th>
+              <th>Projeto / Ambiente</th>
               <th>Status</th>
               <th>Data de criação</th>
               <th>Ações</th>
@@ -409,23 +471,21 @@ function Producao() {
           </thead>
 
           <tbody>
-
-            {producoes.length === 0 ? (
+            {producoesFiltradas.length === 0 ? (
               <tr>
-                <td colSpan="5">
-                  Nenhuma produção cadastrada.
+                <td colSpan="5" className="producao-vazio">
+                  {pesquisa
+                    ? 'Nenhuma produção encontrada para essa pesquisa.'
+                    : 'Nenhuma produção cadastrada.'}
                 </td>
               </tr>
             ) : (
-              producoes.map((producao) => (
+              producoesFiltradas.map((producao) => (
                 <tr key={producao.id}>
+                  <td>#{producao.id}</td>
 
                   <td>
-                    #{producao.id}
-                  </td>
-
-                  <td>
-                    Pedido #{producao.pedidoId}
+                    {nomeProjetoAmbiente(producao.pedidoId)}
                   </td>
 
                   <td>
@@ -433,50 +493,37 @@ function Producao() {
                   </td>
 
                   <td>
-                    {formatarData(
-                      producao.dataCriacao
-                    )}
+                    {formatarData(producao.dataCriacao)}
                   </td>
 
                   <td>
                     <div className="acoes">
-
                       <button
                         className="botao-materiais"
-                        onClick={() =>
-                          abrirMateriais(producao)
-                        }
+                        onClick={() => abrirMateriais(producao)}
                       >
                         Materiais
                       </button>
 
                       <button
                         className="botao-editar"
-                        onClick={() =>
-                          editar(producao)
-                        }
+                        onClick={() => editar(producao)}
                       >
                         Editar
                       </button>
 
                       <button
                         className="botao-excluir"
-                        onClick={() =>
-                          excluir(producao.id)
-                        }
+                        onClick={() => excluir(producao.id)}
                       >
                         Excluir
                       </button>
-
                     </div>
                   </td>
-
                 </tr>
               ))
             )}
-
           </tbody>
-
         </table>
 
       </div>
@@ -495,8 +542,7 @@ function Producao() {
                 </h2>
 
                 <p>
-                  Pedido #
-                  {producaoSelecionada?.pedidoId}
+                  {nomeProjetoAmbiente(producaoSelecionada?.pedidoId)}
                 </p>
               </div>
 
@@ -536,8 +582,7 @@ function Producao() {
                       key={material.id}
                       value={material.id}
                     >
-                      {material.nome} — Estoque:{' '}
-                      {material.quantidade}
+                      {material.nome} — Estoque: {material.quantidade}
                     </option>
                   ))}
                 </select>
@@ -560,7 +605,7 @@ function Producao() {
                 />
               </div>
 
-                {(producaoSelecionada?.status === 'AGUARDANDO' ||
+              {(producaoSelecionada?.status === 'AGUARDANDO' ||
                 producaoSelecionada?.status === 'EM_PRODUCAO') && (
                 <button
                   type="submit"
@@ -568,7 +613,7 @@ function Producao() {
                 >
                   + Adicionar
                 </button>
-                )}
+              )}
 
             </form>
 
@@ -578,48 +623,45 @@ function Producao() {
 
               {itensProducao.length === 0 ? (
                 <p>
-                  Nenhum material adicionado a esta
-                  produção.
+                  Nenhum material adicionado a esta produção.
                 </p>
               ) : (
                 <table>
 
-                      <thead>
-                        <tr>
-                          <th>Material</th>
-                          <th>Quantidade</th>
-                          <th>Ações</th>
-                        </tr>
-                      </thead>
+                  <thead>
+                    <tr>
+                      <th>Material</th>
+                      <th>Quantidade</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
 
                   <tbody>
+                    {itensProducao.map((item) => (
+                      <tr key={item.id}>
 
-                  {itensProducao.map((item) => (
-                        <tr key={item.id}>
+                        <td>
+                          {item.materialNome}
+                        </td>
 
-                          <td>
-                            {item.materialNome}
-                          </td>
+                        <td>
+                          {item.quantidade}
+                        </td>
 
-                          <td>
-                            {item.quantidade}
-                          </td>
+                        <td>
+                          {producaoSelecionada?.status === 'AGUARDANDO' && (
+                            <button
+                              type="button"
+                              className="botao-excluir"
+                              onClick={() => removerMaterial(item.id)}
+                            >
+                              Remover
+                            </button>
+                          )}
+                        </td>
 
-                          <td>
-                            {producaoSelecionada?.status === 'AGUARDANDO' && (
-                              <button
-                                type="button"
-                                className="botao-excluir"
-                                onClick={() => removerMaterial(item.id)}
-                              >
-                                Remover
-                              </button>
-                            )}
-                          </td>
-
-                        </tr>
-                      ))}
-
+                      </tr>
+                    ))}
                   </tbody>
 
                 </table>

@@ -183,3 +183,59 @@
 .botao-excluir:hover {
   background-color: #fecaca;
 }
+
+.ambientes-tabela-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px;
+}
+
+.ambientes-tabela-header h2 {
+  margin: 0 0 5px;
+}
+
+.ambientes-tabela-header span {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.ambientes-pesquisa {
+  width: 100%;
+  max-width: 500px;
+  flex: 1;
+  min-width: 280px;
+}
+
+.ambientes-pesquisa input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border: 1px solid #dce1e8;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ambientes-pesquisa input:focus {
+  border-color: #2f6fed;
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.1);
+}
+
+.ambientes-vazio {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.ambientes-vazio p {
+  color: #6b7280;
+}
+
+@media (max-width: 600px) {
+  .ambientes-pesquisa {
+    max-width: 100%;
+  }
+}

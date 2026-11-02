@@ -8,6 +8,7 @@ function Clientes() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [clienteEditando, setClienteEditando] = useState(null)
   const [carregandoCep, setCarregandoCep] = useState(false)
+  const [pesquisa, setPesquisa] = useState('')
 
   const [endereco, setEndereco] = useState({
     cep: '',
@@ -321,6 +322,18 @@ function Clientes() {
     return documento
   }
 
+  const clientesFiltrados = clientes.filter((cliente) => {
+  const termo = pesquisa.toLowerCase().trim()
+
+  return (
+    cliente.nome?.toLowerCase().includes(termo) ||
+    cliente.email?.toLowerCase().includes(termo) ||
+    cliente.telefone?.toLowerCase().includes(termo) ||
+    cliente.cpfCnpj?.toLowerCase().includes(termo) ||
+    formatarCpfCnpj(cliente.cpfCnpj).toLowerCase().includes(termo)
+  )
+})
+
   return (
     <div className="clientes">
       <div className="clientes-header">
@@ -481,47 +494,85 @@ function Clientes() {
         </div>
       )}
 
-      <div className="clientes-tabela">
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>CPF/CNPJ</th>
-              <th>Telefone</th>
-              <th>E-mail</th>
-              <th>Ações</th>
+     <div className="clientes-tabela">
+  <div className="clientes-tabela-header">
+    <div>
+      <h2>Clientes cadastrados</h2>
+      <span>
+        {clientesFiltrados.length}{' '}
+        {clientesFiltrados.length === 1
+          ? 'cliente encontrado'
+          : 'clientes encontrados'}
+      </span>
+    </div>
+
+    <div className="clientes-pesquisa">
+      <input
+        type="text"
+        placeholder="Pesquisar por nome, CPF/CNPJ, telefone ou e-mail..."
+        value={pesquisa}
+        onChange={(event) => setPesquisa(event.target.value)}
+      />
+    </div>
+  </div>
+
+  {clientesFiltrados.length === 0 ? (
+    <div className="clientes-vazio">
+      <h3>
+        {clientes.length === 0
+          ? 'Nenhum cliente cadastrado'
+          : 'Nenhum cliente encontrado'}
+      </h3>
+      <p>
+        {clientes.length === 0
+          ? 'Cadastre um novo cliente para começar.'
+          : 'Tente pesquisar por outro nome, documento, telefone ou e-mail.'}
+      </p>
+    </div>
+  ) : (
+    <div className="tabela-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>CPF/CNPJ</th>
+            <th>Telefone</th>
+            <th>E-mail</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {clientesFiltrados.map((cliente) => (
+            <tr key={cliente.id}>
+              <td>{cliente.nome}</td>
+              <td>{formatarCpfCnpj(cliente.cpfCnpj)}</td>
+              <td>{cliente.telefone}</td>
+              <td>{cliente.email}</td>
+              <td>
+                <div className="acoes">
+                  <button
+                    className="botao-editar"
+                    onClick={() => editarCliente(cliente)}
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    className="botao-excluir"
+                    onClick={() => excluirCliente(cliente.id)}
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </td>
             </tr>
-          </thead>
-
-          <tbody>
-            {clientes.map((cliente) => (
-              <tr key={cliente.id}>
-                <td>{cliente.nome}</td>
-                <td>{formatarCpfCnpj(cliente.cpfCnpj)}</td>
-                <td>{cliente.telefone}</td>
-                <td>{cliente.email}</td>
-                <td>
-                  <div className="acoes">
-                    <button
-                      className="botao-editar"
-                      onClick={() => editarCliente(cliente)}
-                    >
-                      Editar
-                    </button>
-
-                    <button
-                      className="botao-excluir"
-                      onClick={() => excluirCliente(cliente.id)}
-                    >
-                      Excluir
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
     </div>
   )
 }

@@ -17,6 +17,7 @@ function Orcamentos() {
   const [mostrarMaterial, setMostrarMaterial] = useState(false)
 
   const [orcamentoEditando, setOrcamentoEditando] = useState(null)
+  const [pesquisa, setPesquisa] = useState('')
 
  const [formulario, setFormulario] = useState({
   valorMaoObra: '',
@@ -449,6 +450,19 @@ setOrcamentoSelecionado(respostaOrcamento.data)
 
     return 'status-pendente'
   }
+
+  const orcamentosFiltrados = orcamentos.filter((orcamento) => {
+  const termo = pesquisa.toLowerCase().trim()
+
+  return (
+    orcamento.projetoNome?.toLowerCase().includes(termo) ||
+    orcamento.ambienteNome?.toLowerCase().includes(termo) ||
+    orcamento.descricao?.toLowerCase().includes(termo) ||
+    traduzirStatus(orcamento.status)?.toLowerCase().includes(termo) ||
+    String(orcamento.valor ?? '').includes(termo) ||
+    formatarValor(orcamento.valor).toLowerCase().includes(termo)
+  )
+})
 
   /*
    * ==================================================
@@ -980,149 +994,127 @@ setOrcamentoSelecionado(respostaOrcamento.data)
 
       )}
 
-      <div className="orcamentos-tabela">
+     <div className="orcamentos-tabela">
 
-        <table>
+  <div className="orcamentos-tabela-header">
+    <div>
+      <h2>Orçamentos cadastrados</h2>
+      <span>
+        {orcamentosFiltrados.length}{' '}
+        {orcamentosFiltrados.length === 1
+          ? 'orçamento encontrado'
+          : 'orçamentos encontrados'}
+      </span>
+    </div>
 
-          <thead>
+    <div className="orcamentos-pesquisa">
+      <input
+        type="text"
+        placeholder="Pesquisar por projeto, ambiente, status ou descrição..."
+        value={pesquisa}
+        onChange={(event) => setPesquisa(event.target.value)}
+      />
+    </div>
+  </div>
 
-            <tr>
-              <th>Projeto</th>
-              <th>Ambiente</th>
-              <th>Valor</th>
-              <th>Status</th>
-              <th>Criação</th>
-              <th>Validade</th>
-              <th>Descrição</th>
-              <th>Ações</th>
-            </tr>
+  {orcamentosFiltrados.length === 0 ? (
 
-          </thead>
+    <div className="orcamentos-vazio">
+      <h3>
+        {orcamentos.length === 0
+          ? 'Nenhum orçamento cadastrado'
+          : 'Nenhum orçamento encontrado'}
+      </h3>
 
-          <tbody>
+      <p>
+        {orcamentos.length === 0
+          ? 'Os orçamentos cadastrados aparecerão aqui.'
+          : 'Tente pesquisar por outro projeto, ambiente ou status.'}
+      </p>
+    </div>
 
-            {orcamentos.length === 0 ? (
+  ) : (
 
-              <tr>
-                <td
-                  colSpan="8"
-                  className="tabela-vazia"
+    <div className="tabela-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Projeto</th>
+            <th>Ambiente</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Criação</th>
+            <th>Validade</th>
+            <th>Descrição</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {orcamentosFiltrados.map((orcamento) => (
+            <tr key={orcamento.id}>
+              <td>{orcamento.projetoNome || '-'}</td>
+
+              <td>{orcamento.ambienteNome || '-'}</td>
+
+              <td>{formatarValor(orcamento.valor)}</td>
+
+              <td>
+                <span
+                  className={`status ${classeStatus(orcamento.status)}`}
                 >
-                  Nenhum orçamento cadastrado.
-                </td>
-              </tr>
+                  {traduzirStatus(orcamento.status)}
+                </span>
+              </td>
 
-            ) : (
+              <td>{formatarData(orcamento.dataCriacao)}</td>
 
-              orcamentos.map((orcamento) => (
+              <td>{formatarData(orcamento.dataValidade)}</td>
 
-                <tr key={orcamento.id}>
+              <td>{orcamento.descricao || '-'}</td>
 
-                  <td>
-                    {orcamento.projetoNome || '-'}
-                  </td>
+              <td>
+                <div className="acoes">
+                  <button
+                    className="botao-abrir"
+                    onClick={() => abrirOrcamento(orcamento)}
+                  >
+                    Abrir
+                  </button>
 
-                  <td>
-                    {orcamento.ambienteNome || '-'}
-                  </td>
+                  <button
+                    className="botao-editar"
+                    onClick={() => editarOrcamento(orcamento)}
+                  >
+                    Editar
+                  </button>
 
-                  <td>
-                    {formatarValor(
-                      orcamento.valor
-                    )}
-                  </td>
-
-                  <td>
-
-                    <span
-                      className={`status ${classeStatus(
-                        orcamento.status
-                      )}`}
+                  {orcamento.status === 'PENDENTE' && (
+                    <button
+                      className="botao-aprovar"
+                      onClick={() => aprovarOrcamento(orcamento)}
                     >
-                      {traduzirStatus(
-                        orcamento.status
-                      )}
-                    </span>
+                      Aprovar
+                    </button>
+                  )}
 
-                  </td>
+                  <button
+                    className="botao-excluir"
+                    onClick={() => excluirOrcamento(orcamento.id)}
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
 
-                  <td>
-                    {formatarData(
-                      orcamento.dataCriacao
-                    )}
-                  </td>
+  )}
 
-                  <td>
-                    {formatarData(
-                      orcamento.dataValidade
-                    )}
-                  </td>
-
-                  <td>
-                    {orcamento.descricao || '-'}
-                  </td>
-
-                  <td>
-
-                    <div className="acoes">
-
-                      <button
-                        className="botao-abrir"
-                        onClick={() =>
-                          abrirOrcamento(
-                            orcamento
-                          )
-                        }
-                      >
-                        Abrir
-                      </button>
-
-                      <button
-                        className="botao-editar"
-                        onClick={() =>
-                          editarOrcamento(
-                            orcamento
-                          )
-                        }
-                      >
-                        Editar
-                      </button>
-
-                              {orcamento.status === 'PENDENTE' && (
-                              <button
-                                className="botao-aprovar"
-                                onClick={() => aprovarOrcamento(orcamento)}
-                              >
-                                Aprovar
-                              </button>
-                            )}
-
-                      <button
-                        className="botao-excluir"
-                        onClick={() =>
-                          excluirOrcamento(
-                            orcamento.id
-                          )
-                        }
-                      >
-                        Excluir
-                      </button>
-
-                    </div>
-
-                  </td>
-
-                </tr>
-
-              ))
-
-            )}
-
-          </tbody>
-
-        </table>
-
-      </div>
+</div>
 
     </div>
   )

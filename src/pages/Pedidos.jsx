@@ -8,6 +8,7 @@ function Pedidos() {
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [pedidoEditando, setPedidoEditando] = useState(null)
+  const [pesquisa, setPesquisa] = useState('')
 
 const [formulario, setFormulario] = useState({
   status: 'PENDENTE',
@@ -163,6 +164,21 @@ setFormulario({
       return status
   }
 }
+
+const pedidosFiltrados = pedidos.filter((pedido) => {
+  const termo = pesquisa.toLowerCase().trim()
+  const orcamento = encontrarOrcamento(pedido.orcamentoId)
+
+  return (
+    orcamento?.projetoNome?.toLowerCase().includes(termo) ||
+    orcamento?.ambienteNome?.toLowerCase().includes(termo) ||
+    textoStatus(pedido.status)?.toLowerCase().includes(termo) ||
+    String(orcamento?.valor ?? '').includes(termo) ||
+    (orcamento
+      ? `R$ ${Number(orcamento.valor).toFixed(2)}`.includes(termo)
+      : false)
+  )
+})
   return (
     <div className="pedidos">
 
@@ -304,101 +320,118 @@ setFormulario({
 
       <div className="pedidos-tabela">
 
-        <table>
+  <div className="pedidos-tabela-header">
+    <div>
+      <h2>Pedidos cadastrados</h2>
+      <span>
+        {pedidosFiltrados.length}{' '}
+        {pedidosFiltrados.length === 1
+          ? 'pedido encontrado'
+          : 'pedidos encontrados'}
+      </span>
+    </div>
 
-          <thead>
-            <tr>
-              <th>Projeto</th>
-              <th>Ambiente</th>
-              <th>Valor</th>
-              <th>Status</th>
-              <th>Criação</th>
-              <th>Previsão de entrega</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
+    <div className="pedidos-pesquisa">
+      <input
+        type="text"
+        placeholder="Pesquisar por projeto, ambiente, status ou valor..."
+        value={pesquisa}
+        onChange={(event) => setPesquisa(event.target.value)}
+      />
+    </div>
+  </div>
 
-          <tbody>
+  {pedidosFiltrados.length === 0 ? (
+    <div className="pedidos-vazio">
+      <h3>
+        {pedidos.length === 0
+          ? 'Nenhum pedido cadastrado'
+          : 'Nenhum pedido encontrado'}
+      </h3>
 
-            {pedidos.map((pedido) => {
+      <p>
+        {pedidos.length === 0
+          ? 'Os pedidos cadastrados aparecerão aqui.'
+          : 'Tente pesquisar por outro projeto, ambiente ou status.'}
+      </p>
+    </div>
+  ) : (
+    <div className="tabela-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Projeto</th>
+            <th>Ambiente</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Criação</th>
+            <th>Previsão de entrega</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
 
-              const orcamento = encontrarOrcamento(
-                pedido.orcamentoId
-              )
+        <tbody>
+          {pedidosFiltrados.map((pedido) => {
+            const orcamento = encontrarOrcamento(
+              pedido.orcamentoId
+            )
 
-              return (
-                <tr key={pedido.id}>
+            return (
+              <tr key={pedido.id}>
+                <td>{orcamento?.projetoNome || '-'}</td>
 
-                  <td>
-                    {orcamento?.projetoNome || '-'}
-                  </td>
+                <td>{orcamento?.ambienteNome || '-'}</td>
 
-                  <td>
-                    {orcamento?.ambienteNome || '-'}
-                  </td>
+                <td>
+                  {orcamento
+                    ? `R$ ${Number(orcamento.valor).toFixed(2)}`
+                    : '-'}
+                </td>
 
-                  <td>
-                    {orcamento
-                      ? `R$ ${Number(
-                          orcamento.valor
-                        ).toFixed(2)}`
-                      : '-'}
-                  </td>
+                <td>{textoStatus(pedido.status)}</td>
 
-                  <td>
-                    {textoStatus(pedido.status)}
-                  </td>
+                <td>
+                  {pedido.dataCriacao
+                    ? new Date(
+                        pedido.dataCriacao
+                      ).toLocaleDateString('pt-BR')
+                    : '-'}
+                </td>
 
-                  <td>
-                    {pedido.dataCriacao
-                      ? new Date(
-                          pedido.dataCriacao
-                        ).toLocaleDateString('pt-BR')
-                      : '-'}
-                  </td>
-                   <td>
-                      {pedido.previsaoEntrega
-                        ? new Date(
-                            `${pedido.previsaoEntrega}T00:00:00`
-                          ).toLocaleDateString('pt-BR')
-                        : '-'}
-                    </td>
+                <td>
+                  {pedido.previsaoEntrega
+                    ? new Date(
+                        `${pedido.previsaoEntrega}T00:00:00`
+                      ).toLocaleDateString('pt-BR')
+                    : '-'}
+                </td>
 
-                  <td>
+                <td>
+                  <div className="acoes">
+                    <button
+                      className="botao-editar"
+                      onClick={() => editarPedido(pedido)}
+                    >
+                      Editar
+                    </button>
 
-                    <div className="acoes">
+                    <button
+                      className="botao-excluir"
+                      onClick={() => excluirPedido(pedido.id)}
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )}
 
-                      <button
-                        className="botao-editar"
-                        onClick={() =>
-                          editarPedido(pedido)
-                        }
-                      >
-                        Editar
-                      </button>
-
-                      <button
-                        className="botao-excluir"
-                        onClick={() =>
-                          excluirPedido(pedido.id)
-                        }
-                      >
-                        Excluir
-                      </button>
-
-                    </div>
-
-                  </td>
-
-                </tr>
-              )
-            })}
-
-          </tbody>
-
-        </table>
-
-      </div>
+</div>
 
     </div>
   )

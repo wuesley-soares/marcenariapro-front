@@ -2,6 +2,10 @@
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import './Usuarios.css'
+import {
+  Eye,
+  EyeOff
+} from 'lucide-react'
 
 const formularioInicial = {
   nome: '',
@@ -21,6 +25,11 @@ function Usuarios() {
   const [mostrarFormularioSenha, setMostrarFormularioSenha] = useState(false)
   const [novaSenha, setNovaSenha] = useState('')
   const [confirmarNovaSenha, setConfirmarNovaSenha] = useState('')
+  const [mostrarSenha, setMostrarSenha] = useState(false)
+  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false)
+  const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false)
+  const [mostrarConfirmarNovaSenha, setMostrarConfirmarNovaSenha] = useState(false)
+  const [pesquisa, setPesquisa] = useState('')
 
   async function carregarUsuarios() {
     try {
@@ -197,6 +206,16 @@ function Usuarios() {
     }
   }
 
+  const usuariosFiltrados = usuarios.filter((usuario) => {
+  const termo = pesquisa.toLowerCase().trim()
+
+  return (
+    usuario.nome?.toLowerCase().includes(termo) ||
+    usuario.email?.toLowerCase().includes(termo) ||
+    textoPerfil(usuario.perfil).toLowerCase().includes(termo)
+  )
+})
+
   return (
     <div className="usuarios-page">
       <div className="usuarios-header">
@@ -230,14 +249,7 @@ function Usuarios() {
               </p>
             </div>
 
-            <button
-              className="botao-fechar"
-              onClick={fecharFormulario}
-              type="button"
-              aria-label="Fechar formulário"
-            >
-              ×
-            </button>
+
           </div>
 
           <form onSubmit={salvarUsuario}>
@@ -272,33 +284,55 @@ function Usuarios() {
                 <>
                   <div className="campo">
                     <label htmlFor="senha">Senha</label>
-                    <input
-                      id="senha"
-                      type="password"
-                      name="senha"
-                      value={formulario.senha}
-                      onChange={alterarCampo}
-                      placeholder="Mínimo de 6 caracteres"
-                      minLength={6}
-                      autoComplete="new-password"
-                      required
-                    />
+
+                    <div className="usuario-input-senha">
+                      <input
+                        id="senha"
+                        type={mostrarSenha ? 'text' : 'password'}
+                        name="senha"
+                        value={formulario.senha}
+                        onChange={alterarCampo}
+                        placeholder="Mínimo de 6 caracteres"
+                        minLength={6}
+                        autoComplete="new-password"
+                        required
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => setMostrarSenha(!mostrarSenha)}
+                        aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                      >
+                        {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="campo">
-                    <label htmlFor="confirmarSenha">Confirmar senha</label>
-                    <input
-                      id="confirmarSenha"
-                      type="password"
-                      name="confirmarSenha"
-                      value={formulario.confirmarSenha}
-                      onChange={alterarCampo}
-                      placeholder="Digite a senha novamente"
-                      minLength={6}
-                      autoComplete="new-password"
-                      required
-                    />
-                  </div>
+                 <div className="campo">
+  <label htmlFor="confirmarSenha">Confirmar senha</label>
+
+  <div className="usuario-input-senha">
+    <input
+      id="confirmarSenha"
+      type={mostrarConfirmarSenha ? 'text' : 'password'}
+      name="confirmarSenha"
+      value={formulario.confirmarSenha}
+      onChange={alterarCampo}
+      placeholder="Digite a senha novamente"
+      minLength={6}
+      autoComplete="new-password"
+      required
+    />
+
+    <button
+      type="button"
+      onClick={() => setMostrarConfirmarSenha(!mostrarConfirmarSenha)}
+      aria-label={mostrarConfirmarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+    >
+      {mostrarConfirmarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+    </button>
+  </div>
+</div>
                 </>
               )}
 
@@ -367,51 +401,71 @@ function Usuarios() {
               </p>
             </div>
 
-            <button
-              className="botao-fechar"
-              onClick={() => setMostrarFormularioSenha(false)}
-              type="button"
-              aria-label="Fechar formulário"
-            >
-              ×
-            </button>
+
           </div>
 
           <form onSubmit={salvarNovaSenha}>
             <div className="form-grid">
-              <div className="campo">
-                <label htmlFor="novaSenha">Nova senha</label>
-                <input
-                  id="novaSenha"
-                  type="password"
-                  value={novaSenha}
-                  onChange={(event) => setNovaSenha(event.target.value)}
-                  minLength={6}
-                  autoComplete="new-password"
-                  placeholder="Mínimo de 6 caracteres"
-                  required
-                />
-              </div>
+  <div className="campo">
+    <label htmlFor="novaSenha">Nova senha</label>
 
-              <div className="campo">
-                <label htmlFor="confirmarNovaSenha">
-                  Confirmar nova senha
-                </label>
-                <input
-                  id="confirmarNovaSenha"
-                  type="password"
-                  value={confirmarNovaSenha}
-                  onChange={(event) =>
-                    setConfirmarNovaSenha(event.target.value)
-                  }
-                  minLength={6}
-                  autoComplete="new-password"
-                  placeholder="Digite a nova senha novamente"
-                  required
-                />
-              </div>
-            </div>
+    <div className="usuario-input-senha">
+      <input
+        id="novaSenha"
+        type={mostrarNovaSenha ? 'text' : 'password'}
+        value={novaSenha}
+        onChange={(event) => setNovaSenha(event.target.value)}
+        minLength={6}
+        autoComplete="new-password"
+        placeholder="Mínimo de 6 caracteres"
+        required
+      />
 
+      <button
+        type="button"
+        onClick={() => setMostrarNovaSenha(!mostrarNovaSenha)}
+        aria-label={mostrarNovaSenha ? 'Ocultar senha' : 'Mostrar senha'}
+      >
+        {mostrarNovaSenha
+          ? <EyeOff size={18} />
+          : <Eye size={18} />}
+      </button>
+    </div>
+  </div>
+
+  <div className="campo">
+    <label htmlFor="confirmarNovaSenha">
+      Confirmar nova senha
+    </label>
+
+    <div className="usuario-input-senha">
+      <input
+        id="confirmarNovaSenha"
+        type={mostrarConfirmarNovaSenha ? 'text' : 'password'}
+        value={confirmarNovaSenha}
+        onChange={(event) => setConfirmarNovaSenha(event.target.value)}
+        minLength={6}
+        autoComplete="new-password"
+        placeholder="Digite a nova senha novamente"
+        required
+      />
+
+      <button
+        type="button"
+        onClick={() =>
+          setMostrarConfirmarNovaSenha(!mostrarConfirmarNovaSenha)
+        }
+        aria-label={
+          mostrarConfirmarNovaSenha ? 'Ocultar senha' : 'Mostrar senha'
+        }
+      >
+        {mostrarConfirmarNovaSenha
+          ? <EyeOff size={18} />
+          : <Eye size={18} />}
+      </button>
+    </div>
+  </div>
+</div>
             <div className="form-acoes">
               <button
                 type="button"
@@ -430,15 +484,27 @@ function Usuarios() {
       )}
 
       <div className="usuarios-card">
-        <div className="usuarios-card-header">
-          <div>
-            <h2>Funcionários cadastrados</h2>
-            <span>
-              {usuarios.length}{' '}
-              {usuarios.length === 1 ? 'funcionário' : 'funcionários'}
-            </span>
-          </div>
-        </div>
+  <div className="usuarios-card-header">
+  <div>
+    <h2>Funcionários cadastrados</h2>
+    <span>
+      {usuariosFiltrados.length}{' '}
+      {usuariosFiltrados.length === 1
+        ? 'funcionário encontrado'
+        : 'funcionários encontrados'}
+    </span>
+  </div>
+
+  <div className="usuarios-pesquisa">
+    <input
+      type="text"
+      placeholder="Pesquisar por nome, e-mail ou perfil..."
+      value={pesquisa}
+      onChange={(event) => setPesquisa(event.target.value)}
+    />
+  </div>
+</div>
+        
 
         {usuarios.length === 0 ? (
           <div className="usuarios-vazio">
@@ -447,7 +513,12 @@ function Usuarios() {
               Clique em "Novo funcionário" para cadastrar o primeiro.
             </p>
           </div>
-        ) : (
+        ) : usuariosFiltrados.length === 0 ? (
+  <div className="usuarios-vazio">
+    <h3>Nenhum funcionário encontrado</h3>
+    <p>Tente pesquisar por outro nome, e-mail ou perfil.</p>
+  </div>
+) : (
           <div className="tabela-container">
             <table className="usuarios-tabela">
               <thead>
@@ -461,7 +532,7 @@ function Usuarios() {
               </thead>
 
               <tbody>
-                {usuarios.map((usuario) => (
+                {usuariosFiltrados.map((usuario) => (
                   <tr key={usuario.id}>
                     <td>
                       <div className="usuario-nome">
