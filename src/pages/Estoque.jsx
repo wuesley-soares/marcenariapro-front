@@ -235,12 +235,14 @@ function Estoque() {
     )
   }
 
-  function textoTipo(tipo) {
-    if (tipo === 'ENTRADA') return 'Entrada'
-    if (tipo === 'SAIDA') return 'Saída'
+function textoTipo(tipo) {
+  console.log('TIPO RECEBIDO:', tipo)
 
-    return tipo
-  }
+  if (tipo === 'ENTRADA') return 'Entrada'
+  if (tipo === 'SAIDA') return 'Saída'
+
+  return `TIPO DESCONHECIDO: ${tipo}`
+}
 
   return (
     <div className="estoque">
