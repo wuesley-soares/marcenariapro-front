@@ -494,7 +494,8 @@ function Clientes() {
         </div>
       )}
 
-     <div className="clientes-tabela">
+<div className="clientes-tabela">
+
   <div className="clientes-tabela-header">
     <div>
       <h2>Clientes cadastrados</h2>
@@ -530,7 +531,7 @@ function Clientes() {
       </p>
     </div>
   ) : (
-    <div className="tabela-container">
+    <div className="clientes-tabela-scroll">
       <table>
         <thead>
           <tr>
@@ -572,7 +573,9 @@ function Clientes() {
       </table>
     </div>
   )}
+
 </div>
+
     </div>
   )
 }

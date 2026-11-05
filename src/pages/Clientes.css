@@ -274,3 +274,84 @@
     max-width: 100%;
   }
 }
+
+.clientes-tabela-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.clientes-tabela table {
+  min-width: 650px;
+}
+
+/* Tablets */
+@media (max-width: 992px) {
+  .clientes-header {
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
+  .cliente-formulario {
+    padding: 20px;
+  }
+}
+
+/* Celulares */
+@media (max-width: 600px) {
+  .clientes-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .clientes-header h1 {
+    font-size: 22px;
+  }
+
+  .clientes-header button {
+    width: 100%;
+  }
+
+  .cliente-formulario {
+    padding: 16px;
+  }
+
+  .cliente-formulario form {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .formulario-botoes {
+    flex-direction: column-reverse;
+  }
+
+  .formulario-botoes button {
+    width: 100%;
+  }
+
+  .endereco-formulario {
+    padding: 12px;
+  }
+
+  .clientes-tabela-header {
+    padding: 15px;
+    align-items: stretch;
+  }
+
+  .clientes-pesquisa {
+    min-width: 0;
+  }
+
+  .acoes {
+    flex-wrap: wrap;
+  }
+
+  .acoes button {
+    padding: 8px 10px;
+  }
+
+  .clientes-vazio {
+    padding: 25px 15px;
+  }
+}

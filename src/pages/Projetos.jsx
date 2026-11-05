@@ -246,7 +246,7 @@ function Projetos() {
         </div>
       )}
 
-      <div className="projetos-tabela">
+<div className="projetos-tabela">
   <div className="projetos-tabela-header">
     <div>
       <h2>Projetos cadastrados</h2>
@@ -275,6 +275,7 @@ function Projetos() {
           ? 'Nenhum projeto cadastrado'
           : 'Nenhum projeto encontrado'}
       </h3>
+
       <p>
         {projetos.length === 0
           ? 'Cadastre um novo projeto para começar.'
@@ -282,7 +283,7 @@ function Projetos() {
       </p>
     </div>
   ) : (
-    <div className="tabela-container">
+    <div className="projetos-tabela-scroll">
       <table>
         <thead>
           <tr>
@@ -343,6 +344,7 @@ function Projetos() {
     </div>
   )}
 </div>
+
     </div>
   )
 }
