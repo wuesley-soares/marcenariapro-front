@@ -457,10 +457,10 @@ function Ambientes() {
                         >
                           Orçamento
                         </button>
-                        {projeto.nomeDocumento ? (
+                        {ambiente.nomeDocumento ? (
                               <button
                                 className="botao-anexo"
-                                onClick={() => visualizarDocumento(projeto.id)}
+                                onClick={() => visualizarDocumento(ambiente.id)}
                                 type="button"
                               >
                                 Ver anexo
