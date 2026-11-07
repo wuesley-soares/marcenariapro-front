@@ -471,17 +471,7 @@ function Ambientes() {
                               </span>
                             )}
 
-                        {ambiente.nomeDocumento && (
-                          <button
-                            type="button"
-                            className="botao-visualizar-documento"
-                            onClick={() =>
-                              visualizarDocumento(ambiente.id)
-                            }
-                          >
-                            PDF
-                          </button>
-                        )}
+                        
                       </div>
                     </td>
                   </tr>

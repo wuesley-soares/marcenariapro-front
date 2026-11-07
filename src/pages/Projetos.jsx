@@ -480,17 +480,7 @@ function Projetos() {
                           </span>
                         )}
 
-                        {projeto.nomeDocumento && (
-                          <button
-                            type="button"
-                            className="botao-visualizar-documento"
-                            onClick={() =>
-                              visualizarDocumento(projeto.id)
-                            }
-                          >
-                            PDF
-                          </button>
-                        )}
+
                       </div>
                     </td>
                   </tr>
