@@ -711,7 +711,7 @@ function formatarMoeda(valor) {
                   aria-label={`Conversar com ${cliente.nome} pelo WhatsApp`}
                 >
                   <img
-                    src="/whatsapp.png"
+                    src="/whatsapp-icon.png"
                     alt=""
                   />
                 </button>
