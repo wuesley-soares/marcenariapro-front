@@ -59,6 +59,25 @@ function Clientes() {
     }))
   }
 
+  function abrirWhatsApp(telefone) {
+  const numero = telefone?.replace(/\D/g, '')
+
+  if (!numero) {
+    alert('Cliente não possui telefone cadastrado.')
+    return
+  }
+
+  const numeroCompleto = numero.startsWith('55')
+    ? numero
+    : `55${numero}`
+
+  window.open(
+    `https://wa.me/${numeroCompleto}`,
+    '_blank',
+    'noopener,noreferrer'
+  )
+}
+
   async function buscarCep(cepInformado) {
     const cep = cepInformado.replace(/\D/g, '')
 
@@ -564,6 +583,15 @@ function Clientes() {
                     onClick={() => excluirCliente(cliente.id)}
                   >
                     Excluir
+                  </button>
+
+                  <button
+                    className="botao-whatsapp"
+                    onClick={() => abrirWhatsApp(cliente.telefone)}
+                    type="button"
+                    title="Conversar pelo WhatsApp"
+                  >
+                    WhatsApp
                   </button>
                 </div>
               </td>
