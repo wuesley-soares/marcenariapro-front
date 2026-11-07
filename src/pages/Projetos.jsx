@@ -466,6 +466,20 @@ function Projetos() {
                           Ambientes
                         </button>
 
+                        {projeto.nomeDocumento ? (
+                          <button
+                            className="botao-anexo"
+                            onClick={() => visualizarDocumento(projeto.id)}
+                            type="button"
+                          >
+                            Ver anexo
+                          </button>
+                        ) : (
+                          <span className="sem-anexo">
+                            Sem anexo
+                          </span>
+                        )}
+
                         {projeto.nomeDocumento && (
                           <button
                             type="button"

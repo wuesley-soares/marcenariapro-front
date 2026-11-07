@@ -409,3 +409,24 @@
 }
 
 }
+
+.botao-anexo {
+  background: #e8f0ff;
+  color: #2563eb;
+  border: none;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.botao-anexo:hover {
+  background: #d5e4ff;
+}
+
+.sem-anexo {
+  color: #888;
+  font-size: 12px;
+  white-space: nowrap;
+}
