@@ -13,6 +13,7 @@ function Ambientes() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [ambienteEditando, setAmbienteEditando] = useState(null)
   const [pesquisa, setPesquisa] = useState('')
+  const [documento, setDocumento] = useState(null)
 
   const [formulario, setFormulario] = useState({
     nome: '',
@@ -58,8 +59,37 @@ function Ambientes() {
     })
   }
 
+  function selecionarDocumento(event) {
+    const arquivo = event.target.files[0]
+
+    if (!arquivo) {
+      setDocumento(null)
+      return
+    }
+
+    if (
+      arquivo.type !== 'application/pdf' &&
+      !arquivo.name.toLowerCase().endsWith('.pdf')
+    ) {
+      alert('Selecione somente arquivos PDF.')
+      event.target.value = ''
+      setDocumento(null)
+      return
+    }
+
+    if (arquivo.size > 5 * 1024 * 1024) {
+      alert('O arquivo PDF não pode ultrapassar 5 MB.')
+      event.target.value = ''
+      setDocumento(null)
+      return
+    }
+
+    setDocumento(arquivo)
+  }
+
   function novoAmbiente() {
     setAmbienteEditando(null)
+    setDocumento(null)
 
     setFormulario({
       nome: '',
@@ -71,6 +101,7 @@ function Ambientes() {
 
   function editarAmbiente(ambiente) {
     setAmbienteEditando(ambiente)
+    setDocumento(null)
 
     setFormulario({
       nome: ambiente.nome || '',
@@ -83,6 +114,7 @@ function Ambientes() {
   function cancelarFormulario() {
     setMostrarFormulario(false)
     setAmbienteEditando(null)
+    setDocumento(null)
 
     setFormulario({
       nome: '',
@@ -100,16 +132,35 @@ function Ambientes() {
         projetoId: Number(projetoId)
       }
 
+      const formData = new FormData()
+
+      formData.append(
+        'dados',
+        new Blob([JSON.stringify(dados)], {
+          type: 'application/json'
+        })
+      )
+
+      if (documento) {
+        formData.append('documento', documento)
+      }
+
       if (ambienteEditando) {
-        await api.put(`/ambientes/${ambienteEditando.id}`, dados)
+        await api.put(
+          `/ambientes/${ambienteEditando.id}`,
+          formData
+        )
+
         alert('Ambiente atualizado com sucesso!')
       } else {
-        await api.post('/ambientes', dados)
+        await api.post('/ambientes', formData)
+
         alert('Ambiente cadastrado com sucesso!')
       }
 
       cancelarFormulario()
-      carregarAmbientes()
+      await carregarAmbientes()
+
     } catch (error) {
       console.error('Erro ao salvar ambiente:', error)
 
@@ -118,6 +169,42 @@ function Ambientes() {
         'Erro ao salvar ambiente.'
 
       alert(mensagem)
+    }
+  }
+
+  async function visualizarDocumento(ambienteId) {
+    const novaAba = window.open('', '_blank')
+
+    if (!novaAba) {
+      alert('Permita pop-ups no navegador para visualizar o documento.')
+      return
+    }
+
+    try {
+      novaAba.document.write('Carregando documento...')
+
+      const resposta = await api.get(
+        `/ambientes/${ambienteId}/documento`,
+        { responseType: 'blob' }
+      )
+
+      const arquivoUrl = URL.createObjectURL(resposta.data)
+
+      novaAba.location.href = arquivoUrl
+
+      setTimeout(() => {
+        URL.revokeObjectURL(arquivoUrl)
+      }, 60000)
+
+    } catch (error) {
+      console.error('Erro ao visualizar documento:', error)
+
+      novaAba.close()
+
+      alert(
+        error.response?.data?.message ||
+        'Não foi possível abrir o documento.'
+      )
     }
   }
 
@@ -133,7 +220,8 @@ function Ambientes() {
 
       alert('Ambiente excluído com sucesso!')
 
-      carregarAmbientes()
+      await carregarAmbientes()
+
     } catch (error) {
       console.error('Erro ao excluir ambiente:', error)
 
@@ -146,13 +234,13 @@ function Ambientes() {
   }
 
   const ambientesFiltrados = ambientes.filter((ambiente) => {
-  const termo = pesquisa.toLowerCase().trim()
+    const termo = pesquisa.toLowerCase().trim()
 
-  return (
-    ambiente.nome?.toLowerCase().includes(termo) ||
-    ambiente.descricao?.toLowerCase().includes(termo)
-  )
-})
+    return (
+      ambiente.nome?.toLowerCase().includes(termo) ||
+      ambiente.descricao?.toLowerCase().includes(termo)
+    )
+  })
 
   return (
     <div className="ambientes">
@@ -195,9 +283,12 @@ function Ambientes() {
           <form onSubmit={salvarAmbiente}>
 
             <div>
-              <label>Nome do ambiente</label>
+              <label htmlFor="nomeAmbiente">
+                Nome do ambiente
+              </label>
 
               <input
+                id="nomeAmbiente"
                 type="text"
                 name="nome"
                 value={formulario.nome}
@@ -208,15 +299,63 @@ function Ambientes() {
             </div>
 
             <div className="campo-descricao">
-              <label>Descrição</label>
+              <label htmlFor="descricaoAmbiente">
+                Descrição
+              </label>
 
               <textarea
+                id="descricaoAmbiente"
                 name="descricao"
                 value={formulario.descricao}
                 onChange={alterarCampo}
                 placeholder="Descrição do ambiente"
                 rows="4"
               />
+            </div>
+
+            <div className="campo-documento">
+              <label htmlFor="documentoAmbiente">
+                Documento do ambiente (PDF)
+              </label>
+
+              <input
+                id="documentoAmbiente"
+                type="file"
+                accept="application/pdf,.pdf"
+                onChange={selecionarDocumento}
+              />
+
+              <small>
+                Arquivo PDF de até 5 MB.
+              </small>
+
+              {documento && (
+                <p className="documento-selecionado">
+                  Novo arquivo: {documento.name}
+                </p>
+              )}
+
+              {ambienteEditando?.nomeDocumento && (
+                <div className="documento-atual">
+                  <span>
+                    Documento atual: {ambienteEditando.nomeDocumento}
+                  </span>
+
+                  <button
+                    type="button"
+                    className="botao-visualizar-documento"
+                    onClick={() =>
+                      visualizarDocumento(ambienteEditando.id)
+                    }
+                  >
+                    Visualizar PDF
+                  </button>
+
+                  <small>
+                    Se não selecionar outro arquivo, o documento atual será mantido.
+                  </small>
+                </div>
+              )}
             </div>
 
             <div className="formulario-botoes">
@@ -241,91 +380,104 @@ function Ambientes() {
       )}
 
       <div className="ambientes-tabela">
-  <div className="ambientes-tabela-header">
-    <div>
-      <h2>Ambientes cadastrados</h2>
-      <span>
-        {ambientesFiltrados.length}{' '}
-        {ambientesFiltrados.length === 1
-          ? 'ambiente encontrado'
-          : 'ambientes encontrados'}
-      </span>
-    </div>
+        <div className="ambientes-tabela-header">
+          <div>
+            <h2>Ambientes cadastrados</h2>
+            <span>
+              {ambientesFiltrados.length}{' '}
+              {ambientesFiltrados.length === 1
+                ? 'ambiente encontrado'
+                : 'ambientes encontrados'}
+            </span>
+          </div>
 
-    <div className="ambientes-pesquisa">
-      <input
-        type="text"
-        placeholder="Pesquisar por nome ou descrição..."
-        value={pesquisa}
-        onChange={(event) => setPesquisa(event.target.value)}
-      />
-    </div>
-  </div>
+          <div className="ambientes-pesquisa">
+            <input
+              type="text"
+              placeholder="Pesquisar por nome ou descrição..."
+              value={pesquisa}
+              onChange={(event) => setPesquisa(event.target.value)}
+            />
+          </div>
+        </div>
 
-  {ambientesFiltrados.length === 0 ? (
-    <div className="ambientes-vazio">
-      <h3>
-        {ambientes.length === 0
-          ? 'Nenhum ambiente cadastrado'
-          : 'Nenhum ambiente encontrado'}
-      </h3>
-      <p>
-        {ambientes.length === 0
-          ? 'Cadastre um novo ambiente para começar.'
-          : 'Tente pesquisar por outro nome ou descrição.'}
-      </p>
-    </div>
-  ) : (
-    <div className="tabela-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Descrição</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
+        {ambientesFiltrados.length === 0 ? (
+          <div className="ambientes-vazio">
+            <h3>
+              {ambientes.length === 0
+                ? 'Nenhum ambiente cadastrado'
+                : 'Nenhum ambiente encontrado'}
+            </h3>
 
-        <tbody>
-          {ambientesFiltrados.map((ambiente) => (
-            <tr key={ambiente.id}>
-              <td>{ambiente.nome}</td>
+            <p>
+              {ambientes.length === 0
+                ? 'Cadastre um novo ambiente para começar.'
+                : 'Tente pesquisar por outro nome ou descrição.'}
+            </p>
+          </div>
+        ) : (
+          <div className="tabela-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Descrição</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
 
-              <td>{ambiente.descricao || '-'}</td>
+              <tbody>
+                {ambientesFiltrados.map((ambiente) => (
+                  <tr key={ambiente.id}>
+                    <td>{ambiente.nome}</td>
 
-              <td>
-                <div className="acoes">
-                  <button
-                    className="botao-editar"
-                    onClick={() => editarAmbiente(ambiente)}
-                  >
-                    Editar
-                  </button>
+                    <td>{ambiente.descricao || '-'}</td>
 
-                  <button
-                    className="botao-excluir"
-                    onClick={() => excluirAmbiente(ambiente.id)}
-                  >
-                    Excluir
-                  </button>
+                    <td>
+                      <div className="acoes">
+                        <button
+                          className="botao-editar"
+                          onClick={() => editarAmbiente(ambiente)}
+                        >
+                          Editar
+                        </button>
 
-                  <button
-                    className="botao-abrir"
-                    onClick={() =>
-                      navigate(`/ambientes/${ambiente.id}/orcamentos`)
-                    }
-                  >
-                    Orçamento
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )}
-</div>
+                        <button
+                          className="botao-excluir"
+                          onClick={() => excluirAmbiente(ambiente.id)}
+                        >
+                          Excluir
+                        </button>
+
+                        <button
+                          className="botao-abrir"
+                          onClick={() =>
+                            navigate(`/ambientes/${ambiente.id}/orcamentos`)
+                          }
+                        >
+                          Orçamento
+                        </button>
+
+                        {ambiente.nomeDocumento && (
+                          <button
+                            type="button"
+                            className="botao-visualizar-documento"
+                            onClick={() =>
+                              visualizarDocumento(ambiente.id)
+                            }
+                          >
+                            PDF
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
     </div>
   )

@@ -339,4 +339,73 @@
   .acoes button {
     padding: 8px 10px;
   }
+  
+/* Documento PDF */
+
+.campo-documento {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.campo-documento input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.campo-documento small {
+  color: #666;
+  font-size: 12px;
+}
+
+.documento-selecionado {
+  color: #237a43;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.documento-atual {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+
+.botao-visualizar-documento {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #2f6fed;
+  color: white;
+  cursor: pointer;
+}
+
+.botao-visualizar-documento:hover {
+  background: #2459c5;
+}
+
+@media (max-width: 600px) {
+  .campo-documento {
+    grid-column: 1;
+  }
+
+  .documento-atual {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .botao-visualizar-documento {
+    width: 100%;
+  }
+}
+
 }

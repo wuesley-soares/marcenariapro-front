@@ -236,12 +236,10 @@ function Estoque() {
   }
 
 function textoTipo(tipo) {
-  console.log('TIPO RECEBIDO:', tipo)
-
   if (tipo === 'ENTRADA') return 'Entrada'
   if (tipo === 'SAIDA') return 'Saída'
 
-  return `TIPO DESCONHECIDO: ${tipo}`
+  return 'Desconhecido'
 }
 
   return (
@@ -492,7 +490,7 @@ function textoTipo(tipo) {
       <div className="estoque-tabela">
 
         <h2>Materiais</h2>
-
+         <div className="estoque-tabela-scroll">
         <table>
 
           <thead>
@@ -574,12 +572,14 @@ function textoTipo(tipo) {
           </tbody>
 
         </table>
+        </div>
 
       </div>
 
       <div className="estoque-tabela">
 
         <h2>Histórico de movimentações</h2>
+        <div className="estoque-tabela-scroll">
 
         <table>
 
@@ -640,6 +640,7 @@ function textoTipo(tipo) {
           </tbody>
 
         </table>
+        </div>
 
       </div>
 

@@ -329,25 +329,50 @@
   font-size: 14px;
 }
 
+
+
 /* RESPONSIVO */
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .usuarios-page {
     padding: 20px;
   }
 
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .usuarios-tabela {
+    min-width: 750px;
+  }
+}
+
+@media (max-width: 768px) {
+  .usuarios-page {
+    padding: 16px;
+  }
+
   .usuarios-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 15px;
+  }
+
+  .usuarios-header h1 {
+    font-size: 23px;
   }
 
   .botao-novo-usuario {
     width: 100%;
   }
 
+  .usuario-form-card {
+    padding: 16px;
+  }
+
   .form-grid {
     grid-template-columns: 1fr;
+    gap: 15px;
   }
 
   .form-acoes {
@@ -360,15 +385,55 @@
   }
 
   .usuarios-card-header {
-    padding: 18px;
+    padding: 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .usuarios-pesquisa {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .usuarios-vazio {
+    padding: 35px 15px;
+  }
+
+  .usuario-acoes {
+    min-width: 130px;
+    flex-wrap: wrap;
+  }
+
+  .usuario-acoes .botao-acao {
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .usuarios-page {
+    padding: 12px;
+  }
+
+  .usuario-form-card {
+    padding: 13px;
+  }
+
+  .form-header h2 {
+    font-size: 18px;
+  }
+
+  .usuarios-card-header h2 {
+    font-size: 16px;
   }
 
   .usuarios-tabela th,
   .usuarios-tabela td {
-    padding: 12px 15px;
+    padding: 11px 12px;
+    font-size: 13px;
   }
+}
 
-  
 /* CAMPO DE SITUAÇÃO */
 
 .campo-status {
@@ -414,15 +479,10 @@
   background-color: #e5e7eb;
 }
 
-@media (max-width: 768px) {
-  .usuario-acoes {
-    min-width: 130px;
-  }
-}
-
-}
+/* CAMPO DE SENHA */
 
 .usuario-input-senha {
+  position: relative;
   display: flex;
   align-items: center;
   width: 100%;
@@ -442,6 +502,7 @@
   flex: 1;
   min-width: 0;
   width: 100%;
+  padding-right: 45px;
   border: none;
   outline: none;
   box-shadow: none;
@@ -452,39 +513,6 @@
   border: none;
   outline: none;
   box-shadow: none;
-}
-
-.usuario-input-senha button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  padding: 8px 10px;
-  border: none;
-  background: transparent;
-  color: #667085;
-  cursor: pointer;
-}
-
-.usuario-input-senha button:hover {
-  color: #2f6fed;
-}
-
-.usuario-input-senha button:focus-visible {
-  outline: 2px solid #2f6fed;
-  border-radius: 4px;
-}
-
-.usuario-input-senha {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.usuario-input-senha input {
-  width: 100%;
-  padding-right: 45px;
 }
 
 .usuario-input-senha button {
@@ -504,6 +532,13 @@
   color: #2f6fed;
 }
 
+.usuario-input-senha button:focus-visible {
+  outline: 2px solid #2f6fed;
+  border-radius: 4px;
+}
+
+/* PESQUISA */
+
 .usuarios-card-header {
   display: flex;
   align-items: center;
@@ -519,6 +554,7 @@
 
 .usuarios-pesquisa input {
   width: 100%;
+  box-sizing: border-box;
   padding: 11px 14px;
   border: 1px solid #dce1e8;
   border-radius: 8px;
@@ -536,9 +572,37 @@
   color: #9ca3af;
 }
 
-@media (max-width: 600px) {
-  .usuarios-pesquisa {
-    max-width: 100%;
-  }
+.usuarios-card {
+  min-width: 0;
 }
 
+.tabela-container {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.usuarios-tabela {
+  min-width: 750px;
+}
+.usuario-form-card,
+.usuario-form-card * {
+  box-sizing: border-box;
+}
+
+.form-grid > * {
+  min-width: 0;
+}
+.botao-fechar {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 26px;
+  cursor: pointer;
+  padding: 0 5px;
+  line-height: 1;
+}
+
+.botao-fechar:hover {
+  color: #dc2626;
+}

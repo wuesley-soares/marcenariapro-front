@@ -12,6 +12,7 @@ function Projetos() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [projetoEditando, setProjetoEditando] = useState(null)
   const [pesquisa, setPesquisa] = useState('')
+  const [documento, setDocumento] = useState(null)
 
   const [formulario, setFormulario] = useState({
     nome: '',
@@ -52,8 +53,34 @@ function Projetos() {
     })
   }
 
+  function selecionarDocumento(event) {
+    const arquivo = event.target.files[0]
+
+    if (!arquivo) {
+      setDocumento(null)
+      return
+    }
+
+    if (arquivo.type !== 'application/pdf') {
+      alert('Selecione somente arquivos PDF.')
+      event.target.value = ''
+      setDocumento(null)
+      return
+    }
+
+    if (arquivo.size > 5 * 1024 * 1024) {
+      alert('O arquivo PDF não pode ultrapassar 5 MB.')
+      event.target.value = ''
+      setDocumento(null)
+      return
+    }
+
+    setDocumento(arquivo)
+  }
+
   function novoProjeto() {
     setProjetoEditando(null)
+    setDocumento(null)
 
     setFormulario({
       nome: '',
@@ -66,6 +93,7 @@ function Projetos() {
 
   function editarProjeto(projeto) {
     setProjetoEditando(projeto)
+    setDocumento(null)
 
     setFormulario({
       nome: projeto.nome || '',
@@ -81,6 +109,7 @@ function Projetos() {
   function cancelarFormulario() {
     setMostrarFormulario(false)
     setProjetoEditando(null)
+    setDocumento(null)
 
     setFormulario({
       nome: '',
@@ -99,16 +128,35 @@ function Projetos() {
         clienteId: Number(formulario.clienteId)
       }
 
+      const formData = new FormData()
+
+      formData.append(
+        'dados',
+        new Blob([JSON.stringify(dados)], {
+          type: 'application/json'
+        })
+      )
+
+      if (documento) {
+        formData.append('documento', documento)
+      }
+
       if (projetoEditando) {
-        await api.put(`/projetos/${projetoEditando.id}`, dados)
+        await api.put(
+          `/projetos/${projetoEditando.id}`,
+          formData
+        )
+
         alert('Projeto atualizado com sucesso!')
       } else {
-        await api.post('/projetos', dados)
+        await api.post('/projetos', formData)
+
         alert('Projeto cadastrado com sucesso!')
       }
 
       cancelarFormulario()
       await carregarProjetos()
+
     } catch (error) {
       console.error('Erro ao salvar projeto:', error)
 
@@ -117,6 +165,42 @@ function Projetos() {
         'Erro ao salvar projeto.'
 
       alert(mensagem)
+    }
+  }
+
+  async function visualizarDocumento(projetoId) {
+    const novaAba = window.open('', '_blank')
+
+    if (!novaAba) {
+      alert('Permita pop-ups no navegador para visualizar o documento.')
+      return
+    }
+
+    try {
+      novaAba.document.write('Carregando documento...')
+
+      const resposta = await api.get(
+        `/projetos/${projetoId}/documento`,
+        { responseType: 'blob' }
+      )
+
+      const arquivoUrl = URL.createObjectURL(resposta.data)
+
+      novaAba.location.href = arquivoUrl
+
+      setTimeout(() => {
+        URL.revokeObjectURL(arquivoUrl)
+      }, 60000)
+
+    } catch (error) {
+      console.error('Erro ao visualizar documento:', error)
+
+      novaAba.close()
+
+      alert(
+        error.response?.data?.message ||
+        'Não foi possível abrir o documento.'
+      )
     }
   }
 
@@ -132,6 +216,7 @@ function Projetos() {
 
       alert('Projeto excluído com sucesso!')
       await carregarProjetos()
+
     } catch (error) {
       console.error('Erro ao excluir projeto:', error)
 
@@ -144,22 +229,22 @@ function Projetos() {
   }
 
   const projetosFiltrados = projetos.filter((projeto) => {
-  const termo = pesquisa.toLowerCase().trim()
+    const termo = pesquisa.toLowerCase().trim()
 
-  const nomeCliente =
-    projeto.cliente?.nome ||
-    clientes.find(
-      (cliente) =>
-        cliente.id === (projeto.cliente?.id ?? projeto.clienteId)
-    )?.nome ||
-    ''
+    const nomeCliente =
+      projeto.cliente?.nome ||
+      clientes.find(
+        (cliente) =>
+          cliente.id === (projeto.cliente?.id ?? projeto.clienteId)
+      )?.nome ||
+      ''
 
-  return (
-    projeto.nome?.toLowerCase().includes(termo) ||
-    projeto.descricao?.toLowerCase().includes(termo) ||
-    nomeCliente.toLowerCase().includes(termo)
-  )
-})
+    return (
+      projeto.nome?.toLowerCase().includes(termo) ||
+      projeto.descricao?.toLowerCase().includes(termo) ||
+      nomeCliente.toLowerCase().includes(termo)
+    )
+  })
 
   return (
     <div className="projetos">
@@ -228,6 +313,51 @@ function Projetos() {
               />
             </div>
 
+            <div className="campo-documento">
+              <label htmlFor="documento">
+                Documento do projeto (PDF)
+              </label>
+
+              <input
+                id="documento"
+                type="file"
+                accept="application/pdf,.pdf"
+                onChange={selecionarDocumento}
+              />
+
+              <small>
+                Arquivo PDF de até 5 MB.
+              </small>
+
+              {documento && (
+                <p className="documento-selecionado">
+                  Novo arquivo: {documento.name}
+                </p>
+              )}
+
+              {projetoEditando?.nomeDocumento && (
+                <div className="documento-atual">
+                  <span>
+                    Documento atual: {projetoEditando.nomeDocumento}
+                  </span>
+
+                  <button
+                    type="button"
+                    className="botao-visualizar-documento"
+                    onClick={() =>
+                      visualizarDocumento(projetoEditando.id)
+                    }
+                  >
+                    Visualizar PDF
+                  </button>
+
+                  <small>
+                    Se não selecionar outro arquivo, o documento atual será mantido.
+                  </small>
+                </div>
+              )}
+            </div>
+
             <div className="formulario-botoes">
               <button
                 type="button"
@@ -246,105 +376,116 @@ function Projetos() {
         </div>
       )}
 
-<div className="projetos-tabela">
-  <div className="projetos-tabela-header">
-    <div>
-      <h2>Projetos cadastrados</h2>
-      <span>
-        {projetosFiltrados.length}{' '}
-        {projetosFiltrados.length === 1
-          ? 'projeto encontrado'
-          : 'projetos encontrados'}
-      </span>
-    </div>
+      <div className="projetos-tabela">
+        <div className="projetos-tabela-header">
+          <div>
+            <h2>Projetos cadastrados</h2>
+            <span>
+              {projetosFiltrados.length}{' '}
+              {projetosFiltrados.length === 1
+                ? 'projeto encontrado'
+                : 'projetos encontrados'}
+            </span>
+          </div>
 
-    <div className="projetos-pesquisa">
-      <input
-        type="text"
-        placeholder="Pesquisar por nome, cliente ou descrição..."
-        value={pesquisa}
-        onChange={(event) => setPesquisa(event.target.value)}
-      />
-    </div>
-  </div>
+          <div className="projetos-pesquisa">
+            <input
+              type="text"
+              placeholder="Pesquisar por nome, cliente ou descrição..."
+              value={pesquisa}
+              onChange={(event) => setPesquisa(event.target.value)}
+            />
+          </div>
+        </div>
 
-  {projetosFiltrados.length === 0 ? (
-    <div className="projetos-vazio">
-      <h3>
-        {projetos.length === 0
-          ? 'Nenhum projeto cadastrado'
-          : 'Nenhum projeto encontrado'}
-      </h3>
+        {projetosFiltrados.length === 0 ? (
+          <div className="projetos-vazio">
+            <h3>
+              {projetos.length === 0
+                ? 'Nenhum projeto cadastrado'
+                : 'Nenhum projeto encontrado'}
+            </h3>
 
-      <p>
-        {projetos.length === 0
-          ? 'Cadastre um novo projeto para começar.'
-          : 'Tente pesquisar por outro nome, cliente ou descrição.'}
-      </p>
-    </div>
-  ) : (
-    <div className="projetos-tabela-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Cliente</th>
-            <th>Descrição</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
+            <p>
+              {projetos.length === 0
+                ? 'Cadastre um novo projeto para começar.'
+                : 'Tente pesquisar por outro nome, cliente ou descrição.'}
+            </p>
+          </div>
+        ) : (
+          <div className="projetos-tabela-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Cliente</th>
+                  <th>Descrição</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
 
-        <tbody>
-          {projetosFiltrados.map((projeto) => (
-            <tr key={projeto.id}>
-              <td>{projeto.nome}</td>
+              <tbody>
+                {projetosFiltrados.map((projeto) => (
+                  <tr key={projeto.id}>
+                    <td>{projeto.nome}</td>
 
-              <td>
-                {projeto.cliente?.nome ||
-                  clientes.find(
-                    (cliente) =>
-                      cliente.id ===
-                      (projeto.cliente?.id ?? projeto.clienteId)
-                  )?.nome ||
-                  '-'}
-              </td>
+                    <td>
+                      {projeto.cliente?.nome ||
+                        clientes.find(
+                          (cliente) =>
+                            cliente.id ===
+                            (projeto.cliente?.id ?? projeto.clienteId)
+                        )?.nome ||
+                        '-'}
+                    </td>
 
-              <td>{projeto.descricao || '-'}</td>
+                    <td>{projeto.descricao || '-'}</td>
 
-              <td>
-                <div className="acoes">
-                  <button
-                    className="botao-editar"
-                    onClick={() => editarProjeto(projeto)}
-                  >
-                    Editar
-                  </button>
+                    <td>
+                      <div className="acoes">
+                        <button
+                          className="botao-editar"
+                          onClick={() => editarProjeto(projeto)}
+                        >
+                          Editar
+                        </button>
 
-                  <button
-                    className="botao-excluir"
-                    onClick={() => excluirProjeto(projeto.id)}
-                  >
-                    Excluir
-                  </button>
+                        <button
+                          className="botao-excluir"
+                          onClick={() => excluirProjeto(projeto.id)}
+                        >
+                          Excluir
+                        </button>
 
-                  <button
-                    className="botao-abrir"
-                    onClick={() =>
-                      navigate(`/projetos/${projeto.id}/ambientes`)
-                    }
-                  >
-                    Ambientes
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )}
-</div>
+                        <button
+                          className="botao-abrir"
+                          onClick={() =>
+                            navigate(`/projetos/${projeto.id}/ambientes`)
+                          }
+                        >
+                          Ambientes
+                        </button>
 
+                        {projeto.nomeDocumento && (
+                          <button
+                            type="button"
+                            className="botao-visualizar-documento"
+                            onClick={() =>
+                              visualizarDocumento(projeto.id)
+                            }
+                          >
+                            PDF
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

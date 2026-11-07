@@ -235,22 +235,29 @@ function Usuarios() {
 
       {mostrarFormulario && (
         <div className="usuario-form-card">
-          <div className="form-header">
-            <div>
-              <h2>
-                {modo === 'cadastro'
-                  ? 'Novo funcionário'
-                  : 'Editar funcionário'}
-              </h2>
-              <p>
-                {modo === 'cadastro'
-                  ? 'Preencha os dados para cadastrar um funcionário.'
-                  : 'Atualize os dados do funcionário.'}
-              </p>
-            </div>
+  <div className="form-header">
+  <div>
+    <h2>
+      {modo === 'cadastro'
+        ? 'Novo funcionário'
+        : 'Editar funcionário'}
+    </h2>
+    <p>
+      {modo === 'cadastro'
+        ? 'Preencha os dados para cadastrar um funcionário.'
+        : 'Atualize os dados do funcionário.'}
+    </p>
+  </div>
 
-
-          </div>
+  <button
+    type="button"
+    className="botao-fechar"
+    onClick={fecharFormulario}
+    aria-label="Fechar formulário"
+  >
+    ×
+  </button>
+</div>
 
           <form onSubmit={salvarUsuario}>
             <div className="form-grid">
@@ -393,16 +400,26 @@ function Usuarios() {
 
       {mostrarFormularioSenha && usuarioSelecionado && (
         <div className="usuario-form-card">
-          <div className="form-header">
-            <div>
-              <h2>Alterar senha</h2>
-              <p>
-                Defina uma nova senha para {usuarioSelecionado.nome}.
-              </p>
-            </div>
+            <div className="form-header">
+              <div>
+                <h2>Alterar senha</h2>
+                <p>
+                  Defina uma nova senha para {usuarioSelecionado.nome}.
+                </p>
+              </div>
 
-
-          </div>
+              <button
+                type="button"
+                className="botao-fechar"
+                onClick={() => {
+                  setMostrarFormularioSenha(false)
+                  setUsuarioSelecionado(null)
+                }}
+                aria-label="Fechar formulário"
+              >
+                ×
+              </button>
+                  </div>
 
           <form onSubmit={salvarNovaSenha}>
             <div className="form-grid">
