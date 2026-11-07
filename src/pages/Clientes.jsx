@@ -9,6 +9,8 @@ function Clientes() {
   const [clienteEditando, setClienteEditando] = useState(null)
   const [carregandoCep, setCarregandoCep] = useState(false)
   const [pesquisa, setPesquisa] = useState('')
+  const [financeiros, setFinanceiros] = useState({})
+const [filtroFinanceiro, setFiltroFinanceiro] = useState('TODOS')
 
   const [endereco, setEndereco] = useState({
     cep: '',
@@ -32,14 +34,37 @@ function Clientes() {
     carregarClientes()
   }, [])
 
-  async function carregarClientes() {
-    try {
-      const resposta = await api.get('/clientes')
-      setClientes(resposta.data)
-    } catch (error) {
-      console.error('Erro ao carregar clientes:', error)
-    }
+async function carregarClientes() {
+  try {
+    const resposta = await api.get('/clientes')
+    const listaClientes = resposta.data
+
+    setClientes(listaClientes)
+
+    const resultados = await Promise.all(
+      listaClientes.map(async (cliente) => {
+        try {
+          const respostaFinanceira = await api.get(
+            `/clientes/${cliente.id}/financeiro`
+          )
+
+          return [cliente.id, respostaFinanceira.data]
+        } catch (error) {
+          console.error(
+            `Erro ao carregar financeiro do cliente ${cliente.id}:`,
+            error
+          )
+
+          return [cliente.id, null]
+        }
+      })
+    )
+
+    setFinanceiros(Object.fromEntries(resultados))
+  } catch (error) {
+    console.error('Erro ao carregar clientes:', error)
   }
+}
 
   function alterarCampo(event) {
     const { name, value } = event.target
@@ -340,21 +365,85 @@ function Clientes() {
 
     return documento
   }
+     
+    const totalPedidos = Object.values(financeiros).reduce(
+  (total, financeiro) =>
+    total + Number(financeiro?.totalPedidos || 0),
+  0
+)
 
-  const clientesFiltrados = clientes.filter((cliente) => {
+const totalPago = Object.values(financeiros).reduce(
+  (total, financeiro) =>
+    total + Number(financeiro?.totalPago || 0),
+  0
+)
+
+const saldoReceber = Object.values(financeiros).reduce(
+  (total, financeiro) =>
+    total + Number(financeiro?.saldoReceber || 0),
+  0
+)
+
+const quantidadeQuitados = Object.values(financeiros).filter(
+  (financeiro) => financeiro?.situacao === 'QUITADO'
+).length
+
+const quantidadeComSaldo = Object.values(financeiros).filter(
+  (financeiro) => financeiro?.situacao === 'COM_SALDO_A_RECEBER'
+).length
+
+const quantidadeSemPedidos = Object.values(financeiros).filter(
+  (financeiro) => financeiro?.situacao === 'SEM_PEDIDOS'
+).length
+
+function formatarMoeda(valor) {
+  return Number(valor || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  })
+}
+ const clientesFiltrados = clientes.filter((cliente) => {
   const termo = pesquisa.toLowerCase().trim()
 
-  return (
+  const correspondePesquisa =
     cliente.nome?.toLowerCase().includes(termo) ||
     cliente.email?.toLowerCase().includes(termo) ||
     cliente.telefone?.toLowerCase().includes(termo) ||
     cliente.cpfCnpj?.toLowerCase().includes(termo) ||
     formatarCpfCnpj(cliente.cpfCnpj).toLowerCase().includes(termo)
-  )
+
+  const situacao = financeiros[cliente.id]?.situacao
+
+  const correspondeFinanceiro =
+    filtroFinanceiro === 'TODOS' ||
+    situacao === filtroFinanceiro
+
+  return correspondePesquisa && correspondeFinanceiro
 })
 
   return (
     <div className="clientes">
+      <div className="clientes-resumo">
+  <div className="cliente-resumo-card">
+    <span>Total em pedidos</span>
+    <strong>{formatarMoeda(totalPedidos)}</strong>
+  </div>
+
+  <div className="cliente-resumo-card">
+    <span>Total recebido</span>
+    <strong>{formatarMoeda(totalPago)}</strong>
+  </div>
+
+  <div className="cliente-resumo-card">
+    <span>Saldo a receber</span>
+    <strong>{formatarMoeda(saldoReceber)}</strong>
+  </div>
+
+  <div className="cliente-resumo-card">
+    <span>Clientes quitados</span>
+    <strong>{quantidadeQuitados}</strong>
+  </div>
+</div>
       <div className="clientes-header">
         <div>
           <h1>Clientes</h1>
@@ -524,6 +613,18 @@ function Clientes() {
           ? 'cliente encontrado'
           : 'clientes encontrados'}
       </span>
+
+      <div className="clientes-filtros">
+  <select
+    value={filtroFinanceiro}
+    onChange={(event) => setFiltroFinanceiro(event.target.value)}
+  >
+    <option value="TODOS">Todas as situações</option>
+    <option value="QUITADO">Quitado</option>
+    <option value="COM_SALDO_A_RECEBER">Com saldo a receber</option>
+    <option value="SEM_PEDIDOS">Sem pedidos</option>
+  </select>
+</div>
     </div>
 
     <div className="clientes-pesquisa">
@@ -558,7 +659,9 @@ function Clientes() {
             <th>CPF/CNPJ</th>
             <th>Telefone</th>
             <th>E-mail</th>
+            <th>Situação financeira</th>
             <th>Ações</th>
+            
           </tr>
         </thead>
 
@@ -569,6 +672,21 @@ function Clientes() {
               <td>{formatarCpfCnpj(cliente.cpfCnpj)}</td>
               <td>{cliente.telefone}</td>
               <td>{cliente.email}</td>
+              <td>
+  {(() => {
+    const situacao = financeiros[cliente.id]?.situacao
+
+    if (!situacao) return 'Carregando...'
+
+    const situacoes = {
+      QUITADO: 'Quitado',
+      COM_SALDO_A_RECEBER: 'Com saldo a receber',
+      SEM_PEDIDOS: 'Sem pedidos'
+    }
+
+    return situacoes[situacao] || 'Não identificado'
+  })()}
+</td>
               <td>
                 <div className="acoes">
                   <button
@@ -585,14 +703,18 @@ function Clientes() {
                     Excluir
                   </button>
 
-                  <button
-                    className="botao-whatsapp"
-                    onClick={() => abrirWhatsApp(cliente.telefone)}
-                    type="button"
-                    title="Conversar pelo WhatsApp"
-                  >
-                    WhatsApp
-                  </button>
+                <button
+                  className="botao-whatsapp"
+                  onClick={() => abrirWhatsApp(cliente.telefone)}
+                  type="button"
+                  title="Conversar pelo WhatsApp"
+                  aria-label={`Conversar com ${cliente.nome} pelo WhatsApp`}
+                >
+                  <img
+                    src="/whatsapp.png"
+                    alt=""
+                  />
+                </button>
                 </div>
               </td>
             </tr>

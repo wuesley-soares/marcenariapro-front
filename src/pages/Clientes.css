@@ -355,3 +355,220 @@
     padding: 25px 15px;
   }
 }
+
+/* Resumo financeiro dos clientes */
+.clientes-resumo {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.cliente-resumo-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.cliente-resumo-card span {
+  display: block;
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.cliente-resumo-card strong {
+  color: #222;
+  font-size: 24px;
+}
+
+/* Filtros */
+.clientes-filtros {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.clientes-filtros select {
+  padding: 11px 12px;
+  border: 1px solid #dce1e8;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  outline: none;
+}
+
+/* Situação financeira */
+.status-financeiro {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-quitado {
+  background: #e6f7ed;
+  color: #16834a;
+}
+
+.status-saldo {
+  background: #fff2dc;
+  color: #b76b00;
+}
+
+.status-sem-pedidos {
+  background: #eef0f3;
+  color: #626b78;
+}
+
+/* Botão de detalhes */
+.botao-detalhes {
+  background: #e8f0ff;
+  color: #2f6fed;
+}
+
+.botao-detalhes:hover {
+  background: #d7e4ff;
+}
+
+/* Modal de detalhes */
+.cliente-modal-fundo {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.cliente-modal {
+  width: 100%;
+  max-width: 850px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-sizing: border-box;
+}
+
+.cliente-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.cliente-modal-header h2 {
+  margin: 0;
+  color: #222;
+}
+
+.cliente-modal-fechar {
+  border: none;
+  background: #f1f2f4;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.cliente-financeiro-detalhes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.cliente-financeiro-item {
+  padding: 15px;
+  background: #f7f8fa;
+  border-radius: 8px;
+}
+
+.cliente-financeiro-item span {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.cliente-financeiro-item strong {
+  color: #222;
+  font-size: 17px;
+}
+
+.cliente-projeto {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.cliente-projeto h3 {
+  margin: 0 0 12px;
+  color: #222;
+}
+
+.cliente-ambiente {
+  padding: 12px;
+  border-top: 1px solid #eee;
+}
+
+.cliente-ambiente strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.cliente-ambiente p {
+  color: #6b7280;
+  font-size: 13px;
+  margin: 5px 0;
+}
+
+@media (max-width: 700px) {
+  .clientes-resumo {
+    grid-template-columns: 1fr;
+  }
+
+  .cliente-financeiro-detalhes {
+    grid-template-columns: 1fr;
+  }
+
+  .cliente-modal {
+    padding: 17px;
+  }
+
+  .cliente-modal-header {
+    align-items: flex-start;
+  }
+}
+
+.botao-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 5px !important;
+  border: none;
+  border-radius: 6px;
+  background: #e8f7ee;
+  cursor: pointer;
+}
+
+.botao-whatsapp:hover {
+  background: #d1f0dd;
+}
+
+.botao-whatsapp img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
