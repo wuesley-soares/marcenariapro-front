@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../services/api'
@@ -8,23 +9,25 @@ function Orcamentos() {
   const navigate = useNavigate()
 
   const [orcamentos, setOrcamentos] = useState([])
+  const [ambientes, setAmbientes] = useState([])
   const [materiais, setMateriais] = useState([])
   const [itensMateriais, setItensMateriais] = useState([])
 
   const [orcamentoSelecionado, setOrcamentoSelecionado] = useState(null)
-
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [mostrarMaterial, setMostrarMaterial] = useState(false)
 
-  const [orcamentoEditando, setOrcamentoEditando] = useState(null)
+  const [ambienteSelecionado, setAmbienteSelecionado] = useState(
+    ambienteId || ''
+  )
+
   const [pesquisa, setPesquisa] = useState('')
 
- const [formulario, setFormulario] = useState({
-  valorMaoObra: '',
-  margemLucro: '',
-  descricao: '',
-  status: 'PENDENTE'
-})
+  const [formulario, setFormulario] = useState({
+    valorMaoObra: '',
+    margemLucro: '',
+    descricao: ''
+  })
 
   const [materialFormulario, setMaterialFormulario] = useState({
     materialId: '',
@@ -35,6 +38,7 @@ function Orcamentos() {
 
   useEffect(() => {
     carregarOrcamentos()
+    carregarAmbientes()
   }, [ambienteId])
 
   async function carregarOrcamentos() {
@@ -56,10 +60,19 @@ function Orcamentos() {
     }
   }
 
+  async function carregarAmbientes() {
+    try {
+      const resposta = await api.get('/ambientes')
+      setAmbientes(resposta.data)
+    } catch (error) {
+      console.error('Erro ao carregar ambientes:', error)
+      alert('Erro ao carregar ambientes.')
+    }
+  }
+
   async function carregarMateriais() {
     try {
       const resposta = await api.get('/materiais')
-      console.log('Dados dos materiais:', resposta.data)
       setMateriais(resposta.data)
     } catch (error) {
       console.error('Erro ao carregar materiais:', error)
@@ -67,112 +80,145 @@ function Orcamentos() {
     }
   }
 
-async function abrirOrcamento(orcamento) {
-  setMostrarMaterial(false)
-
+async function carregarDetalhes(id, dadosIniciais = null) {
   try {
-    const respostaOrcamento = await api.get(
-      `/orcamentos/${orcamento.id}`
-    )
-
-    setOrcamentoSelecionado(respostaOrcamento.data)
-
-    const respostaMateriais = await api.get(
-      `/orcamentos/${orcamento.id}/materiais`
-    )
-
-    setItensMateriais(respostaMateriais.data)
-  } catch (error) {
-    console.error(
-      'Erro ao carregar orçamento:',
-      error
-    )
+    const respostaOrcamento = await api.get(`/orcamentos/${id}`)
+    const orcamento = respostaOrcamento.data
 
     setOrcamentoSelecionado(orcamento)
-    setItensMateriais([])
+
+    setFormulario({
+      valorMaoObra: orcamento.valorMaoObra ?? '',
+      margemLucro: orcamento.margemLucro ?? '',
+      descricao: orcamento.descricao || ''
+    })
+
+    setAmbienteSelecionado(String(orcamento.ambienteId || ''))
+    setMostrarFormulario(true)
+
+    try {
+      const respostaMateriais = await api.get(
+        `/orcamentos/${id}/materiais`
+      )
+
+      setItensMateriais(respostaMateriais.data)
+    } catch (error) {
+      console.error('Erro ao carregar materiais:', error)
+      setItensMateriais([])
+      alert('Não foi possível carregar os materiais.')
+    }
+
+  } catch (error) {
+    console.error('Erro ao carregar orçamento:', error)
+
+    if (dadosIniciais) {
+      setOrcamentoSelecionado(dadosIniciais)
+
+      setFormulario({
+        valorMaoObra: dadosIniciais.valorMaoObra ?? '',
+        margemLucro: dadosIniciais.margemLucro ?? '',
+        descricao: dadosIniciais.descricao || ''
+      })
+
+      setAmbienteSelecionado(
+        String(dadosIniciais.ambienteId || '')
+      )
+
+      setItensMateriais([])
+      setMostrarFormulario(true)
+    } else {
+      alert('Erro ao carregar os dados do orçamento.')
+    }
   }
 }
 
-  function fecharOrcamento() {
+  function novoOrcamento() {
     setOrcamentoSelecionado(null)
     setItensMateriais([])
     setMostrarMaterial(false)
+
+    setFormulario({
+      valorMaoObra: '',
+      margemLucro: '',
+      descricao: ''
+    })
+
+    setAmbienteSelecionado(ambienteId || '')
+    setMostrarFormulario(true)
+  }
+
+  function abrirOrcamento(orcamento) {
+    setMostrarMaterial(false)
+    carregarDetalhes(orcamento.id, orcamento)
+  }
+
+  function fecharFormulario() {
+    setMostrarFormulario(false)
+    setOrcamentoSelecionado(null)
+    setItensMateriais([])
+    setMostrarMaterial(false)
+
+    setFormulario({
+      valorMaoObra: '',
+      margemLucro: '',
+      descricao: ''
+    })
+
+    carregarOrcamentos()
   }
 
   function alterarCampo(event) {
     const { name, value } = event.target
 
-    setFormulario({
-      ...formulario,
+    setFormulario((anterior) => ({
+      ...anterior,
       [name]: value
-    })
-  }
-
-  function novoOrcamento() {
-    setOrcamentoEditando(null)
-
-  setFormulario({
-  valorMaoObra: '',
-  margemLucro: '',
-  descricao: '',
-  status: 'PENDENTE'
-})
-
-    setMostrarFormulario(true)
-  }
-
-  function editarOrcamento(orcamento) {
-    setOrcamentoEditando(orcamento)
-
- setFormulario({
-  valorMaoObra: orcamento.valorMaoObra || '',
-  margemLucro: orcamento.margemLucro || '',
-  descricao: orcamento.descricao || '',
-  status: orcamento.status || 'PENDENTE'
-})
-
-    setMostrarFormulario(true)
-  }
-
-  function cancelarFormulario() {
-    setMostrarFormulario(false)
-    setOrcamentoEditando(null)
-
-setFormulario({
-  valorMaoObra: '',
-  margemLucro: '',
-  descricao: '',
-  status: 'PENDENTE'
-})
+    }))
   }
 
   async function salvarOrcamento(event) {
     event.preventDefault()
 
-    try {
-            const dados = {
-          valorMaoObra: Number(formulario.valorMaoObra),
-          margemLucro: Number(formulario.margemLucro),
-          descricao: formulario.descricao,
-          status: formulario.status,
-          ambienteId: Number(ambienteId)
-        }
+    if (!orcamentoSelecionado && !ambienteSelecionado) {
+      alert('Selecione um ambiente para o orçamento.')
+      return
+    }
 
-      if (orcamentoEditando) {
+    try {
+      const dados = {
+        valorMaoObra: Number(formulario.valorMaoObra || 0),
+        margemLucro: Number(formulario.margemLucro || 0),
+        descricao: formulario.descricao,
+        status: orcamentoSelecionado
+          ? orcamentoSelecionado.status
+          : 'PENDENTE',
+        ambienteId: Number(
+          orcamentoSelecionado
+            ? orcamentoSelecionado.ambienteId
+            : ambienteSelecionado
+        )
+      }
+
+      if (orcamentoSelecionado) {
         await api.put(
-          `/orcamentos/${orcamentoEditando.id}`,
+          `/orcamentos/${orcamentoSelecionado.id}`,
           dados
         )
 
         alert('Orçamento atualizado com sucesso!')
-      } else {
-        await api.post('/orcamentos', dados)
 
-        alert('Orçamento cadastrado com sucesso!')
+        await carregarDetalhes(orcamentoSelecionado.id)
+      } else {
+        const resposta = await api.post('/orcamentos', dados)
+
+        alert(
+          'Orçamento cadastrado! Agora você pode adicionar os materiais.'
+        )
+
+        await carregarDetalhes(resposta.data.id, resposta.data)
       }
 
-      cancelarFormulario()
-      carregarOrcamentos()
+      await carregarOrcamentos()
     } catch (error) {
       console.error('Erro ao salvar orçamento:', error)
 
@@ -184,88 +230,63 @@ setFormulario({
     }
   }
 
-  async function aprovarOrcamento(orcamento) {
-  const confirmar = window.confirm(
-    'Deseja aprovar este orçamento?'
-  )
+  async function aprovarOrcamento() {
+    if (!orcamentoSelecionado) return
 
-  if (!confirmar) {
-    return
-  }
-
-  try {
-    const dados = {
-      valorMaoObra: Number(orcamento.valorMaoObra || 0),
-      margemLucro: Number(orcamento.margemLucro || 0),
-      descricao: orcamento.descricao || '',
-      status: 'APROVADO',
-      ambienteId: Number(orcamento.ambienteId)
-    }
-
-    await api.put(
-      `/orcamentos/${orcamento.id}`,
-      dados
+    const confirmar = window.confirm(
+      'Deseja aprovar este orçamento?'
     )
 
-    alert('Orçamento aprovado com sucesso!')
+    if (!confirmar) return
 
-    await carregarOrcamentos()
+    try {
+      const dados = {
+        valorMaoObra: Number(orcamentoSelecionado.valorMaoObra || 0),
+        margemLucro: Number(orcamentoSelecionado.margemLucro || 0),
+        descricao: orcamentoSelecionado.descricao || '',
+        status: 'APROVADO',
+        ambienteId: Number(orcamentoSelecionado.ambienteId)
+      }
 
-    if (
-      orcamentoSelecionado &&
-      Number(orcamentoSelecionado.id) === Number(orcamento.id)
-    ) {
-      const resposta = await api.get(
-        `/orcamentos/${orcamento.id}`
+      await api.put(
+        `/orcamentos/${orcamentoSelecionado.id}`,
+        dados
       )
 
-      setOrcamentoSelecionado(resposta.data)
+      alert('Orçamento aprovado com sucesso!')
+
+      await carregarDetalhes(orcamentoSelecionado.id)
+      await carregarOrcamentos()
+    } catch (error) {
+      console.error('Erro ao aprovar orçamento:', error)
+
+      alert(
+        error.response?.data?.message ||
+        'Erro ao aprovar orçamento.'
+      )
     }
-
-  } catch (error) {
-    console.error(
-      'Erro ao aprovar orçamento:',
-      error
-    )
-
-    const mensagem =
-      error.response?.data?.message ||
-      'Erro ao aprovar orçamento.'
-
-    alert(mensagem)
   }
-}
 
   async function excluirOrcamento(id) {
     const confirmar = window.confirm(
       'Tem certeza que deseja excluir este orçamento?'
     )
 
-    if (!confirmar) {
-      return
-    }
+    if (!confirmar) return
 
     try {
       await api.delete(`/orcamentos/${id}`)
 
       alert('Orçamento excluído com sucesso!')
 
-      if (
-        orcamentoSelecionado &&
-        Number(orcamentoSelecionado.id) === Number(id)
-      ) {
-        fecharOrcamento()
-      }
-
-      carregarOrcamentos()
+      await carregarOrcamentos()
     } catch (error) {
       console.error('Erro ao excluir orçamento:', error)
 
-      const mensagem =
+      alert(
         error.response?.data?.message ||
         'Erro ao excluir orçamento.'
-
-      alert(mensagem)
+      )
     }
   }
 
@@ -289,41 +310,35 @@ setFormulario({
       (item) => Number(item.id) === Number(materialId)
     )
 
-    setMaterialFormulario({
-      ...materialFormulario,
+    setMaterialFormulario((anterior) => ({
+      ...anterior,
       materialId,
       valorUnitario: material
         ? material.valorUnitario
         : ''
-    })
+    }))
   }
 
   function alterarMaterialCampo(event) {
     const { name, value } = event.target
 
-    setMaterialFormulario({
-      ...materialFormulario,
+    setMaterialFormulario((anterior) => ({
+      ...anterior,
       [name]: value
-    })
+    }))
   }
 
   async function adicionarMaterial(event) {
     event.preventDefault()
 
-    if (!orcamentoSelecionado) {
-      return
-    }
+    if (!orcamentoSelecionado) return
 
     try {
       const dados = {
         quantidade: Number(materialFormulario.quantidade),
         unidade: materialFormulario.unidade,
-        valorUnitario: Number(
-          materialFormulario.valorUnitario
-        ),
-        materialId: Number(
-          materialFormulario.materialId
-        )
+        valorUnitario: Number(materialFormulario.valorUnitario),
+        materialId: Number(materialFormulario.materialId)
       }
 
       await api.post(
@@ -335,28 +350,15 @@ setFormulario({
 
       setMostrarMaterial(false)
 
-        const resposta = await api.get(
-          `/orcamentos/${orcamentoSelecionado.id}/materiais`
-        )
-
-        setItensMateriais(resposta.data)
-
-        const respostaOrcamento = await api.get(
-          `/orcamentos/${orcamentoSelecionado.id}`
-        )
-
-setOrcamentoSelecionado(respostaOrcamento.data)
+      await carregarDetalhes(orcamentoSelecionado.id)
+      await carregarOrcamentos()
     } catch (error) {
-      console.error(
-        'Erro ao adicionar material:',
-        error
-      )
+      console.error('Erro ao adicionar material:', error)
 
-      const mensagem =
+      alert(
         error.response?.data?.message ||
         'Erro ao adicionar material.'
-
-      alert(mensagem)
+      )
     }
   }
 
@@ -365,68 +367,43 @@ setOrcamentoSelecionado(respostaOrcamento.data)
       'Deseja remover este material do orçamento?'
     )
 
-    if (!confirmar) {
-      return
-    }
+    if (!confirmar) return
 
     try {
-      await api.delete(
-        `/orcamentos/materiais/${id}`
-      )
+      await api.delete(`/orcamentos/materiais/${id}`)
 
-      const resposta = await api.get(
-        `/orcamentos/${orcamentoSelecionado.id}/materiais`
-      )
-
-      setItensMateriais(resposta.data)
-
-      const respostaOrcamento = await api.get(
-        `/orcamentos/${orcamentoSelecionado.id}`
-      )
-
-      setOrcamentoSelecionado(respostaOrcamento.data)
+      await carregarDetalhes(orcamentoSelecionado.id)
+      await carregarOrcamentos()
 
       alert('Material removido do orçamento!')
     } catch (error) {
-      console.error(
-        'Erro ao remover material:',
-        error
-      )
+      console.error('Erro ao remover material:', error)
 
-      const mensagem =
+      alert(
         error.response?.data?.message ||
         'Erro ao remover material.'
-
-      alert(mensagem)
+      )
     }
   }
 
   function calcularTotalMateriais() {
     return itensMateriais.reduce(
-      (total, item) =>
-        total + Number(item.subtotal || 0),
+      (total, item) => total + Number(item.subtotal || 0),
       0
     )
   }
 
   function formatarValor(valor) {
-    return Number(valor || 0).toLocaleString(
-      'pt-BR',
-      {
-        style: 'currency',
-        currency: 'BRL'
-      }
-    )
+    return Number(valor || 0).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    })
   }
 
   function formatarData(data) {
-    if (!data) {
-      return '-'
-    }
+    if (!data) return '-'
 
-    return new Date(data).toLocaleDateString(
-      'pt-BR'
-    )
+    return new Date(data).toLocaleDateString('pt-BR')
   }
 
   function traduzirStatus(status) {
@@ -440,415 +417,458 @@ setOrcamentoSelecionado(respostaOrcamento.data)
   }
 
   function classeStatus(status) {
-    if (status === 'APROVADO') {
-      return 'status-aprovado'
-    }
-
-    if (status === 'RECUSADO') {
-      return 'status-recusado'
-    }
+    if (status === 'APROVADO') return 'status-aprovado'
+    if (status === 'RECUSADO') return 'status-recusado'
 
     return 'status-pendente'
   }
 
-  const orcamentosFiltrados = orcamentos.filter((orcamento) => {
-  const termo = pesquisa.toLowerCase().trim()
+  const ambientesDisponiveis = ambientes.filter((ambiente) => {
+    const jaPossuiOrcamento = orcamentos.some(
+      (orcamento) =>
+        Number(orcamento.ambienteId) === Number(ambiente.id)
+    )
 
-  return (
-    orcamento.projetoNome?.toLowerCase().includes(termo) ||
-    orcamento.ambienteNome?.toLowerCase().includes(termo) ||
-    orcamento.descricao?.toLowerCase().includes(termo) ||
-    traduzirStatus(orcamento.status)?.toLowerCase().includes(termo) ||
-    String(orcamento.valor ?? '').includes(termo) ||
-    formatarValor(orcamento.valor).toLowerCase().includes(termo)
-  )
-})
+    if (jaPossuiOrcamento) return false
+
+    if (ambienteId) {
+      return Number(ambiente.id) === Number(ambienteId)
+    }
+
+    return true
+  })
+
+  const orcamentosFiltrados = orcamentos.filter((orcamento) => {
+    const termo = pesquisa.toLowerCase().trim()
+
+    return (
+      orcamento.projetoNome?.toLowerCase().includes(termo) ||
+      orcamento.ambienteNome?.toLowerCase().includes(termo) ||
+      orcamento.descricao?.toLowerCase().includes(termo) ||
+      traduzirStatus(orcamento.status)?.toLowerCase().includes(termo) ||
+      String(orcamento.valor ?? '').includes(termo) ||
+      formatarValor(orcamento.valor).toLowerCase().includes(termo)
+    )
+  })
 
   /*
-   * ==================================================
-   * TELA DE DETALHES DO ORÇAMENTO
-   * ==================================================
+   * TELA UNIFICADA DE CRIAÇÃO E EDIÇÃO
    */
 
-  if (orcamentoSelecionado) {
+  if (mostrarFormulario) {
     const totalMateriais = calcularTotalMateriais()
 
     return (
       <div className="orcamentos">
 
         <div className="orcamento-detalhes-header">
-
           <div>
             <button
               className="botao-voltar"
-              onClick={fecharOrcamento}
+              onClick={fecharFormulario}
             >
               ← Voltar
             </button>
 
-            <h1>Orçamento</h1>
+            <h1>
+              {orcamentoSelecionado
+                ? 'Editar orçamento'
+                : 'Novo orçamento'}
+            </h1>
 
             <p>
-              {orcamentoSelecionado.projetoNome}
-              {' - '}
-              {orcamentoSelecionado.ambienteNome}
+              {orcamentoSelecionado
+                ? `${orcamentoSelecionado.projetoNome || ''} - ${orcamentoSelecionado.ambienteNome || ''}`
+                : 'Preencha os dados para cadastrar um orçamento.'}
             </p>
           </div>
 
-          <span
-            className={`status ${classeStatus(
-              orcamentoSelecionado.status
-            )}`}
-          >
-            {traduzirStatus(
-              orcamentoSelecionado.status
+          {orcamentoSelecionado && (
+            <span
+              className={`status ${classeStatus(orcamentoSelecionado.status)}`}
+            >
+              {traduzirStatus(orcamentoSelecionado.status)}
+            </span>
+          )}
+        </div>
+
+        <div className="orcamento-formulario">
+          <h2>Dados do orçamento</h2>
+
+          <form onSubmit={salvarOrcamento}>
+
+            {!orcamentoSelecionado && !ambienteId && (
+              <div>
+                <label>Ambiente</label>
+
+                <select
+                  value={ambienteSelecionado}
+                  onChange={(event) =>
+                    setAmbienteSelecionado(event.target.value)
+                  }
+                  required
+                >
+                  <option value="">
+                    Selecione um ambiente
+                  </option>
+
+                  {ambientesDisponiveis.map((ambiente) => (
+                    <option key={ambiente.id} value={ambiente.id}>
+                      {ambiente.projeto?.nome || 'Projeto'} - {ambiente.nome}
+                    </option>
+                  ))}
+                </select>
+
+                {ambientesDisponiveis.length === 0 && (
+                  <small>
+                    Não existem ambientes disponíveis sem orçamento.
+                  </small>
+                )}
+              </div>
             )}
-          </span>
 
-        </div>
+            {!orcamentoSelecionado && ambienteId && (
+              <div>
+                <label>Ambiente</label>
 
-        <div className="orcamento-resumo">
+                <input
+                  type="text"
+                  value={
+                    ambientes.find(
+                      (ambiente) =>
+                        Number(ambiente.id) === Number(ambienteId)
+                    )?.nome || 'Carregando ambiente...'
+                  }
+                  disabled
+                />
+              </div>
+            )}
 
-          <div className="resumo-card">
-            <span>Projeto</span>
-            <strong>
-              {orcamentoSelecionado.projetoNome || '-'}
-            </strong>
-          </div>
+            {orcamentoSelecionado && (
+              <div>
+                <label>Ambiente</label>
 
-          <div className="resumo-card">
-            <span>Ambiente</span>
-            <strong>
-              {orcamentoSelecionado.ambienteNome || '-'}
-            </strong>
-          </div>
-
-          <div className="resumo-card">
-            <span>Data de criação</span>
-            <strong>
-              {formatarData(
-                orcamentoSelecionado.dataCriacao
-              )}
-            </strong>
-          </div>
-
-          <div className="resumo-card">
-            <span>Validade</span>
-            <strong>
-              {formatarData(
-                orcamentoSelecionado.dataValidade
-              )}
-            </strong>
-          </div>
-
-        </div>
-
-        <div className="orcamento-informacoes">
-
-          <div>
-            <span>Descrição</span>
-
-            <p>
-              {orcamentoSelecionado.descricao ||
-                'Nenhuma descrição informada.'}
-            </p>
-          </div>
-
-        </div>
-
-        <div className="materiais-orcamento">
-
-          <div className="materiais-header">
+                <input
+                  type="text"
+                  value={orcamentoSelecionado.ambienteNome || ''}
+                  disabled
+                />
+              </div>
+            )}
 
             <div>
-              <h2>Materiais</h2>
+              <label>Valor final</label>
 
-              <p>
-                Materiais utilizados neste orçamento
-              </p>
+              <input
+                type="text"
+                value={
+                  orcamentoSelecionado
+                    ? formatarValor(orcamentoSelecionado.valor)
+                    : 'Calculado após adicionar materiais'
+                }
+                disabled
+              />
             </div>
 
-            <button
-              className="botao-novo"
-              onClick={abrirAdicionarMaterial}
-            >
-              + Adicionar material
-            </button>
+            <div>
+              <label>Mão de obra</label>
 
-          </div>
-
-          {mostrarMaterial && (
-
-            <div className="material-formulario">
-
-              <h3>Adicionar material</h3>
-
-              <form onSubmit={adicionarMaterial}>
-
-                <div>
-                  <label>Material</label>
-
-                  <select
-                    name="materialId"
-                    value={
-                      materialFormulario.materialId
-                    }
-                    onChange={selecionarMaterial}
-                    required
-                  >
-                    <option value="">
-                      Selecione um material
-                    </option>
-
-                    {materiais.map((material) => (
-                      <option
-                        key={material.id}
-                        value={material.id}
-                      >
-                        {material.nome} — Estoque: {material.quantidade ?? 0}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label>Quantidade</label>
-
-                  <input
-                    type="number"
-                    name="quantidade"
-                    value={
-                      materialFormulario.quantidade
-                    }
-                    onChange={alterarMaterialCampo}
-                    min="0.01"
-                    step="0.01"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label>Unidade</label>
-
-                  <select
-                    name="unidade"
-                    value={
-                      materialFormulario.unidade
-                    }
-                    onChange={alterarMaterialCampo}
-                  >
-                    <option value="un">
-                      Unidade
-                    </option>
-
-                    <option value="m">
-                      Metro
-                    </option>
-
-                    <option value="m²">
-                      m²
-                    </option>
-
-                    <option value="m³">
-                      m³
-                    </option>
-
-                    <option value="kg">
-                      Kg
-                    </option>
-
-                    <option value="L">
-                      Litro
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label>Valor unitário</label>
-
-                  <input
-                    type="number"
-                    name="valorUnitario"
-                    value={
-                      materialFormulario.valorUnitario
-                    }
-                    onChange={alterarMaterialCampo}
-                    min="0.01"
-                    step="0.01"
-                    required
-                  />
-                </div>
-
-                <div className="material-form-botoes">
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setMostrarMaterial(false)
-                    }
-                  >
-                    Cancelar
-                  </button>
-
-                  <button type="submit">
-                    Adicionar
-                  </button>
-
-                </div>
-
-              </form>
-
+              <input
+                type="number"
+                name="valorMaoObra"
+                value={formulario.valorMaoObra}
+                onChange={alterarCampo}
+                placeholder="Ex.: 2500.00"
+                min="0"
+                step="0.01"
+              />
             </div>
 
-          )}
+            <div>
+              <label>Margem de lucro (%)</label>
 
-          <div className="materiais-tabela">
-
-            <table>
-
-              <thead>
-                <tr>
-                  <th>Material</th>
-                  <th>Quantidade</th>
-                  <th>Unidade</th>
-                  <th>Valor unitário</th>
-                  <th>Subtotal</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-
-              <tbody>
-
-                {itensMateriais.length === 0 ? (
-
-                  <tr>
-                    <td
-                      colSpan="6"
-                      className="tabela-vazia"
-                    >
-                      Nenhum material adicionado
-                      ao orçamento.
-                    </td>
-                  </tr>
-
-                ) : (
-
-                  itensMateriais.map((item) => (
-
-                    <tr key={item.id}>
-
-                      <td>
-                        {item.materialNome}
-                      </td>
-
-                      <td>
-                        {item.quantidade}
-                      </td>
-
-                      <td>
-                        {item.unidade || '-'}
-                      </td>
-
-                      <td>
-                        {formatarValor(
-                          item.valorUnitario
-                        )}
-                      </td>
-
-                      <td>
-                        <strong>
-                          {formatarValor(
-                            item.subtotal
-                          )}
-                        </strong>
-                      </td>
-
-                      <td>
-
-                        <button
-                          className="botao-excluir"
-                          onClick={() =>
-                            excluirMaterial(
-                              item.id
-                            )
-                          }
-                        >
-                          Remover
-                        </button>
-
-                      </td>
-
-                    </tr>
-
-                  ))
-
-                )}
-
-              </tbody>
-
-            </table>
-
-          </div>
-
-          <div className="totais-orcamento">
-
-            <div className="total-linha">
-              <span>Total dos materiais</span>
-
-              <strong>
-                {formatarValor(totalMateriais)}
-              </strong>
+              <input
+                type="number"
+                name="margemLucro"
+                value={formulario.margemLucro}
+                onChange={alterarCampo}
+                placeholder="Ex.: 30"
+                min="0"
+                step="0.01"
+              />
             </div>
 
-            <div className="total-linha">
-  <span>Mão de obra</span>
+            {!orcamentoSelecionado && (
+              <div>
+                <label>Status</label>
 
-  <strong>
-    {formatarValor(
-      orcamentoSelecionado.valorMaoObra
-    )}
-  </strong>
-</div>
+                <input
+                  type="text"
+                  value="Pendente"
+                  disabled
+                />
+              </div>
+            )}
 
-<div className="total-linha">
-  <span>Margem de lucro</span>
+            {orcamentoSelecionado && (
+              <div>
+                <label>Status atual</label>
 
-  <strong>
-    {Number(
-      orcamentoSelecionado.margemLucro || 0
-    ).toFixed(2)}%
-  </strong>
-</div>
+                <input
+                  type="text"
+                  value={traduzirStatus(orcamentoSelecionado.status)}
+                  disabled
+                />
+              </div>
+            )}
 
-            <div className="total-final">
-              <span>Valor final do orçamento</span>
+            <div className="campo-descricao">
+              <label>Descrição</label>
 
-              <strong>
-                {formatarValor(
-                  orcamentoSelecionado.valor
-                )}
-              </strong>
+              <textarea
+                name="descricao"
+                value={formulario.descricao}
+                onChange={alterarCampo}
+                placeholder="Descrição do orçamento"
+                rows="4"
+              />
             </div>
 
-          </div>
+            <div className="formulario-botoes">
+              <button
+                type="button"
+                onClick={fecharFormulario}
+              >
+                Cancelar
+              </button>
 
+              <button
+                type="submit"
+                disabled={
+                  !orcamentoSelecionado &&
+                  !ambienteSelecionado
+                }
+              >
+                {orcamentoSelecionado
+                  ? 'Salvar alterações'
+                  : 'Cadastrar orçamento'}
+              </button>
+            </div>
+
+          </form>
         </div>
 
+        {orcamentoSelecionado && (
+          <div className="materiais-orcamento">
+
+            <div className="materiais-header">
+              <div>
+                <h2>Materiais</h2>
+                <p>Materiais utilizados neste orçamento</p>
+              </div>
+
+              <button
+                className="botao-novo"
+                onClick={abrirAdicionarMaterial}
+              >
+                + Adicionar material
+              </button>
+            </div>
+
+            {mostrarMaterial && (
+              <div className="material-formulario">
+                <h3>Adicionar material</h3>
+
+                <form onSubmit={adicionarMaterial}>
+
+                  <div>
+                    <label>Material</label>
+
+                    <select
+                      name="materialId"
+                      value={materialFormulario.materialId}
+                      onChange={selecionarMaterial}
+                      required
+                    >
+                      <option value="">
+                        Selecione um material
+                      </option>
+
+                      {materiais.map((material) => (
+                        <option
+                          key={material.id}
+                          value={material.id}
+                        >
+                          {material.nome} — Estoque: {material.quantidade ?? 0}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>Quantidade</label>
+
+                    <input
+                      type="number"
+                      name="quantidade"
+                      value={materialFormulario.quantidade}
+                      onChange={alterarMaterialCampo}
+                      min="0.01"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label>Unidade</label>
+
+                    <select
+                      name="unidade"
+                      value={materialFormulario.unidade}
+                      onChange={alterarMaterialCampo}
+                    >
+                      <option value="un">Unidade</option>
+                      <option value="m">Metro</option>
+                      <option value="m²">m²</option>
+                      <option value="m³">m³</option>
+                      <option value="kg">Kg</option>
+                      <option value="L">Litro</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>Valor unitário</label>
+
+                    <input
+                      type="number"
+                      name="valorUnitario"
+                      value={materialFormulario.valorUnitario}
+                      onChange={alterarMaterialCampo}
+                      min="0.01"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+
+                  <div className="material-form-botoes">
+                    <button
+                      type="button"
+                      onClick={() => setMostrarMaterial(false)}
+                    >
+                      Cancelar
+                    </button>
+
+                    <button type="submit">
+                      Adicionar
+                    </button>
+                  </div>
+
+                </form>
+              </div>
+            )}
+
+            <div className="materiais-tabela">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Material</th>
+                    <th>Quantidade</th>
+                    <th>Unidade</th>
+                    <th>Valor unitário</th>
+                    <th>Subtotal</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {itensMateriais.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="tabela-vazia">
+                        Nenhum material adicionado ao orçamento.
+                      </td>
+                    </tr>
+                  ) : (
+                    itensMateriais.map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.materialNome}</td>
+                        <td>{item.quantidade}</td>
+                        <td>{item.unidade || '-'}</td>
+                        <td>{formatarValor(item.valorUnitario)}</td>
+                        <td>
+                          <strong>{formatarValor(item.subtotal)}</strong>
+                        </td>
+                        <td>
+                          <button
+                            className="botao-excluir"
+                            onClick={() => excluirMaterial(item.id)}
+                          >
+                            Remover
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="totais-orcamento">
+
+              <div className="total-linha">
+                <span>Total dos materiais</span>
+                <strong>{formatarValor(totalMateriais)}</strong>
+              </div>
+
+              <div className="total-linha">
+                <span>Mão de obra</span>
+                <strong>
+                  {formatarValor(orcamentoSelecionado.valorMaoObra)}
+                </strong>
+              </div>
+
+              <div className="total-linha">
+                <span>Margem de lucro</span>
+                <strong>
+                  {Number(
+                    orcamentoSelecionado.margemLucro || 0
+                  ).toFixed(2)}%
+                </strong>
+              </div>
+
+              <div className="total-final">
+                <span>Valor final do orçamento</span>
+                <strong>
+                  {formatarValor(orcamentoSelecionado.valor)}
+                </strong>
+              </div>
+
+            </div>
+
+            {orcamentoSelecionado.status === 'PENDENTE' && (
+              <div className="formulario-botoes">
+                <button
+                  className="botao-aprovar"
+                  onClick={aprovarOrcamento}
+                >
+                  Aprovar orçamento
+                </button>
+              </div>
+            )}
+
+          </div>
+        )}
       </div>
     )
   }
 
   /*
-   * ==================================================
    * LISTA DE ORÇAMENTOS
-   * ==================================================
    */
 
   return (
     <div className="orcamentos">
 
       <div className="orcamentos-header">
-
         <div>
           <h1>Orçamentos</h1>
 
@@ -870,252 +890,114 @@ setOrcamentoSelecionado(respostaOrcamento.data)
             </button>
           )}
 
-          {ambienteId && (
-            <button
-              className="botao-novo"
-              onClick={novoOrcamento}
-            >
-              + Novo orçamento
-            </button>
-          )}
+          <button
+            className="botao-novo"
+            onClick={novoOrcamento}
+          >
+            + Novo orçamento
+          </button>
 
         </div>
-
       </div>
 
-      {mostrarFormulario && ambienteId && (
+      <div className="orcamentos-tabela">
 
-        <div className="orcamento-formulario">
+        <div className="orcamentos-tabela-header">
+          <div>
+            <h2>Orçamentos cadastrados</h2>
 
-          <h2>
-            {orcamentoEditando
-              ? 'Editar orçamento'
-              : 'Novo orçamento'}
-          </h2>
+            <span>
+              {orcamentosFiltrados.length}{' '}
+              {orcamentosFiltrados.length === 1
+                ? 'orçamento encontrado'
+                : 'orçamentos encontrados'}
+            </span>
+          </div>
 
-          <form onSubmit={salvarOrcamento}>
-
-              <div>
-                <label>Valor final</label>
-
-                <input
-                  type="text"
-                  value="Calculado automaticamente"
-                  disabled
-                />
-              </div>
-
-
-              <div>
-  <label>Mão de obra</label>
-
-  <input
-    type="number"
-    name="valorMaoObra"
-    value={formulario.valorMaoObra}
-    onChange={alterarCampo}
-    placeholder="Ex.: 2500.00"
-    min="0"
-    step="0.01"
-  />
-</div>
-
-<div>
-  <label>Margem de lucro (%)</label>
-
-  <input
-    type="number"
-    name="margemLucro"
-    value={formulario.margemLucro}
-    onChange={alterarCampo}
-    placeholder="Ex.: 30"
-    min="0"
-    step="0.01"
-  />
-</div>
-
-            <div>
-              <label>Status</label>
-
-              <select
-                name="status"
-                value={formulario.status}
-                onChange={alterarCampo}
-                required
-              >
-                <option value="PENDENTE">
-                  Pendente
-                </option>
-
-                <option value="APROVADO">
-                  Aprovado
-                </option>
-
-                <option value="RECUSADO">
-                  Recusado
-                </option>
-              </select>
-            </div>
-
-            <div className="campo-descricao">
-
-              <label>Descrição</label>
-
-              <textarea
-                name="descricao"
-                value={formulario.descricao}
-                onChange={alterarCampo}
-                placeholder="Descrição do orçamento"
-                rows="4"
-              />
-
-            </div>
-
-            <div className="formulario-botoes">
-
-              <button
-                type="button"
-                onClick={cancelarFormulario}
-              >
-                Cancelar
-              </button>
-
-              <button type="submit">
-                {orcamentoEditando
-                  ? 'Salvar alterações'
-                  : 'Cadastrar'}
-              </button>
-
-            </div>
-
-          </form>
-
+          <div className="orcamentos-pesquisa">
+            <input
+              type="text"
+              placeholder="Pesquisar por projeto, ambiente, status ou descrição..."
+              value={pesquisa}
+              onChange={(event) => setPesquisa(event.target.value)}
+            />
+          </div>
         </div>
 
-      )}
+        {orcamentosFiltrados.length === 0 ? (
+          <div className="orcamentos-vazio">
+            <h3>
+              {orcamentos.length === 0
+                ? 'Nenhum orçamento cadastrado'
+                : 'Nenhum orçamento encontrado'}
+            </h3>
 
-     <div className="orcamentos-tabela">
+            <p>
+              {orcamentos.length === 0
+                ? 'Os orçamentos cadastrados aparecerão aqui.'
+                : 'Tente pesquisar por outro projeto, ambiente ou descrição.'}
+            </p>
+          </div>
+        ) : (
+          <div className="tabela-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Projeto</th>
+                  <th>Ambiente</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                  <th>Criação</th>
+                  <th>Validade</th>
+                  <th>Descrição</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
 
-  <div className="orcamentos-tabela-header">
-    <div>
-      <h2>Orçamentos cadastrados</h2>
-      <span>
-        {orcamentosFiltrados.length}{' '}
-        {orcamentosFiltrados.length === 1
-          ? 'orçamento encontrado'
-          : 'orçamentos encontrados'}
-      </span>
-    </div>
+              <tbody>
+                {orcamentosFiltrados.map((orcamento) => (
+                  <tr key={orcamento.id}>
+                    <td>{orcamento.projetoNome || '-'}</td>
+                    <td>{orcamento.ambienteNome || '-'}</td>
+                    <td>{formatarValor(orcamento.valor)}</td>
 
-    <div className="orcamentos-pesquisa">
-      <input
-        type="text"
-        placeholder="Pesquisar por projeto, ambiente, status ou descrição..."
-        value={pesquisa}
-        onChange={(event) => setPesquisa(event.target.value)}
-      />
-    </div>
-  </div>
+                    <td>
+                      <span
+                        className={`status ${classeStatus(orcamento.status)}`}
+                      >
+                        {traduzirStatus(orcamento.status)}
+                      </span>
+                    </td>
 
-  {orcamentosFiltrados.length === 0 ? (
+                    <td>{formatarData(orcamento.dataCriacao)}</td>
+                    <td>{formatarData(orcamento.dataValidade)}</td>
+                    <td>{orcamento.descricao || '-'}</td>
 
-    <div className="orcamentos-vazio">
-      <h3>
-        {orcamentos.length === 0
-          ? 'Nenhum orçamento cadastrado'
-          : 'Nenhum orçamento encontrado'}
-      </h3>
+                    <td>
+                      <div className="acoes">
+                        <button
+                          className="botao-abrir"
+                          onClick={() => abrirOrcamento(orcamento)}
+                        >
+                          Abrir / Editar
+                        </button>
 
-      <p>
-        {orcamentos.length === 0
-          ? 'Os orçamentos cadastrados aparecerão aqui.'
-          : 'Tente pesquisar por outro projeto, ambiente ou status.'}
-      </p>
-    </div>
+                        <button
+                          className="botao-excluir"
+                          onClick={() => excluirOrcamento(orcamento.id)}
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-  ) : (
-
-    <div className="tabela-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Projeto</th>
-            <th>Ambiente</th>
-            <th>Valor</th>
-            <th>Status</th>
-            <th>Criação</th>
-            <th>Validade</th>
-            <th>Descrição</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {orcamentosFiltrados.map((orcamento) => (
-            <tr key={orcamento.id}>
-              <td>{orcamento.projetoNome || '-'}</td>
-
-              <td>{orcamento.ambienteNome || '-'}</td>
-
-              <td>{formatarValor(orcamento.valor)}</td>
-
-              <td>
-                <span
-                  className={`status ${classeStatus(orcamento.status)}`}
-                >
-                  {traduzirStatus(orcamento.status)}
-                </span>
-              </td>
-
-              <td>{formatarData(orcamento.dataCriacao)}</td>
-
-              <td>{formatarData(orcamento.dataValidade)}</td>
-
-              <td>{orcamento.descricao || '-'}</td>
-
-              <td>
-                <div className="acoes">
-                  <button
-                    className="botao-abrir"
-                    onClick={() => abrirOrcamento(orcamento)}
-                  >
-                    Abrir
-                  </button>
-
-                  <button
-                    className="botao-editar"
-                    onClick={() => editarOrcamento(orcamento)}
-                  >
-                    Editar
-                  </button>
-
-                  {orcamento.status === 'PENDENTE' && (
-                    <button
-                      className="botao-aprovar"
-                      onClick={() => aprovarOrcamento(orcamento)}
-                    >
-                      Aprovar
-                    </button>
-                  )}
-
-                  <button
-                    className="botao-excluir"
-                    onClick={() => excluirOrcamento(orcamento.id)}
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-
-  )}
-
-</div>
-
+      </div>
     </div>
   )
 }

@@ -657,3 +657,70 @@
     max-width: 100%;
   }
 }
+/* =========================
+   NOVO FLUXO DE ORÇAMENTO
+========================= */
+
+.orcamento-formulario select:disabled,
+.orcamento-formulario input:disabled {
+  background-color: #f3f4f6;
+  color: #555;
+  cursor: not-allowed;
+}
+
+.orcamento-formulario select {
+  background-color: white;
+}
+
+.orcamento-formulario form > div {
+  min-width: 0;
+}
+
+/* Área de materiais na tela do orçamento */
+
+.materiais-orcamento {
+  margin-top: 25px;
+}
+
+.materiais-header {
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.materiais-header button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  background-color: #2f6fed;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.materiais-header button:hover {
+  background-color: #255dcc;
+}
+
+/* Responsividade do formulário */
+
+@media (max-width: 700px) {
+  .orcamento-formulario {
+    padding: 18px;
+  }
+
+  .orcamento-formulario form {
+    grid-template-columns: 1fr;
+  }
+
+  .formulario-botoes {
+    flex-direction: column-reverse;
+  }
+
+  .formulario-botoes button {
+    width: 100%;
+  }
+
+  .materiais-header button {
+    width: 100%;
+  }
+}
