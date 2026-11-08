@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Users,
@@ -12,7 +11,8 @@ import {
   Wallet,
   Wrench,
   ChartNoAxesCombined,
-  LogOut
+  LogOut,
+  Truck
 } from 'lucide-react'
 
 import './Sidebar.css'
@@ -62,6 +62,11 @@ function Sidebar() {
         <Link to="/clientes">
           <Contact size={19} />
           <span>Clientes</span>
+        </Link>
+
+        <Link to="/fornecedores">
+          <Truck size={19} />
+          <span>Fornecedores</span>
         </Link>
 
         <Link to="/projetos">

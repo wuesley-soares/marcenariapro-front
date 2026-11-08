@@ -13,6 +13,7 @@ import Estoque from './pages/Estoque'
 import Assistencias from './pages/Assistencias'
 import Usuarios from './pages/Usuarios'
 import Relatorios from './pages/Relatorios'
+import Fornecedores from './pages/Fornecedores'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
             <Route path="/funcionarios" element={<Usuarios />} />
             <Route path="/estoque" element={<Estoque />} />
                     <Route path="/relatorios" element={<Relatorios />} />
+                    <Route path="/fornecedores" element={<Fornecedores />} />
           </Route>
         </Route>
       </Routes>
