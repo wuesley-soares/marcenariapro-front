@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import './Relatorios.css'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 function Relatorios() {
   const [resumo, setResumo] = useState(null)
@@ -137,6 +139,240 @@ function Relatorios() {
 
     carregarRelatorios(novoPeriodo)
   }
+
+  function exportarPDF() {
+  const doc = new jsPDF()
+
+  const azul = [47, 111, 237]
+  const cinza = [102, 112, 133]
+
+  const periodoTexto =
+    filtroAplicado.inicio && filtroAplicado.fim
+      ? `${filtroAplicado.inicio.split('-').reverse().join('/')} até ${filtroAplicado.fim.split('-').reverse().join('/')}`
+      : 'Todo o período'
+
+  const dataGeracao = new Date().toLocaleString('pt-BR')
+
+  function adicionarTitulo(texto, y) {
+    doc.setFontSize(13)
+    doc.setTextColor(24, 34, 48)
+    doc.setFont('helvetica', 'bold')
+    doc.text(texto, 14, y)
+  }
+
+  function adicionarTabela(colunas, linhas, y) {
+    autoTable(doc, {
+      startY: y,
+      head: [colunas],
+      body: linhas,
+      theme: 'grid',
+      styles: {
+        font: 'helvetica',
+        fontSize: 8,
+        cellPadding: 3,
+        textColor: [71, 84, 103],
+        lineColor: [229, 231, 235]
+      },
+      headStyles: {
+        fillColor: azul,
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [249, 250, 251]
+      },
+      margin: {
+        left: 14,
+        right: 14
+      }
+    })
+
+    return doc.lastAutoTable.finalY + 10
+  }
+
+  // Cabeçalho
+  doc.setFillColor(...azul)
+  doc.rect(0, 0, 210, 34, 'F')
+
+  doc.setTextColor(255, 255, 255)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(20)
+  doc.text('MarcenariaPro', 14, 16)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(10)
+  doc.text('Relatório gerencial', 14, 25)
+
+  doc.setTextColor(...cinza)
+  doc.setFontSize(9)
+  doc.text(`Período: ${periodoTexto}`, 14, 43)
+  doc.text(`Gerado em: ${dataGeracao}`, 14, 49)
+
+  let y = 62
+
+  // Visão geral
+  adicionarTitulo('1. Visão geral', y)
+  y += 7
+
+  y = adicionarTabela(
+    ['Indicador', 'Quantidade'],
+    [
+      ['Clientes cadastrados', numero(resumo?.totalClientes)],
+      ['Projetos registrados', numero(resumo?.totalProjetos)],
+      ['Orçamentos cadastrados', numero(resumo?.totalOrcamentos)],
+      ['Pedidos registrados', numero(resumo?.totalPedidos)]
+    ],
+    y
+  )
+
+  // Desempenho operacional
+  adicionarTitulo('2. Desempenho operacional', y)
+  y += 7
+
+  y = adicionarTabela(
+    ['Indicador', 'Quantidade'],
+    [
+      ['Pedidos em produção', numero(resumo?.pedidosEmProducao)],
+      ['Pedidos concluídos', numero(resumo?.pedidosConcluidos)],
+      ['Assistências técnicas', numero(resumo?.totalAssistencias)]
+    ],
+    y
+  )
+
+  // Pedidos por status
+  adicionarTitulo('3. Pedidos por status', y)
+  y += 7
+
+  y = adicionarTabela(
+    ['Status', 'Quantidade'],
+    pedidos.map(item => [
+      String(item.status || '').replaceAll('_', ' '),
+      numero(item.quantidade)
+    ]),
+    y
+  )
+
+  // Produção
+  adicionarTitulo('4. Produção por status', y)
+  y += 7
+
+  y = adicionarTabela(
+    ['Status', 'Quantidade'],
+    producao.map(item => [
+      String(item.status || '').replaceAll('_', ' '),
+      numero(item.quantidade)
+    ]),
+    y
+  )
+
+  // Assistências
+  adicionarTitulo('5. Assistências técnicas', y)
+  y += 7
+
+  y = adicionarTabela(
+    ['Status', 'Quantidade'],
+    assistencias.map(item => [
+      String(item.status || '').replaceAll('_', ' '),
+      numero(item.quantidade)
+    ]),
+    y
+  )
+
+  // Estoque
+  adicionarTitulo('6. Materiais com estoque baixo', y)
+  y += 7
+
+  y = adicionarTabela(
+    ['Material', 'Quantidade atual', 'Estoque mínimo', 'Situação'],
+    estoque.map(item => [
+      item.material || '-',
+      numero(item.quantidadeAtual),
+      numero(item.estoqueMinimo),
+      String(item.situacao || '').replaceAll('_', ' ')
+    ]),
+    y
+  )
+
+  // Financeiro
+  adicionarTitulo('7. Resumo financeiro', y)
+  y += 7
+
+  y = adicionarTabela(
+    ['Indicador', 'Valor'],
+    [
+      ['Total de vendas', valorMonetario(resumo?.valorTotalVendas)],
+      ['Total recebido', valorMonetario(resumo?.valorTotalRecebido)],
+      [
+        'Valor restante',
+        valorMonetario(
+          Number(resumo?.valorTotalVendas || 0) -
+          Number(resumo?.valorTotalRecebido || 0)
+        )
+      ]
+    ],
+    y
+  )
+
+  // Financeiro por pedido
+  if (y > 240) {
+    doc.addPage()
+    y = 20
+  }
+
+  adicionarTitulo('8. Financeiro por pedido', y)
+  y += 7
+
+  adicionarTabela(
+    [
+      'Pedido',
+      'Valor do pedido',
+      'Valor pago',
+      'Valor restante',
+      'Situação'
+    ],
+    financeiro.map(item => [
+      `#${item.pedidoId}`,
+      valorMonetario(item.valorPedido),
+      valorMonetario(item.valorPago),
+      valorMonetario(item.valorRestante),
+      String(item.situacao || '').replaceAll('_', ' ')
+    ]),
+    y
+  )
+
+  // Rodapé e numeração de páginas
+  const totalPaginas = doc.internal.getNumberOfPages()
+
+  for (let pagina = 1; pagina <= totalPaginas; pagina++) {
+    doc.setPage(pagina)
+
+    const altura = doc.internal.pageSize.height
+
+    doc.setDrawColor(229, 231, 235)
+    doc.line(14, altura - 15, 196, altura - 15)
+
+    doc.setFontSize(8)
+    doc.setTextColor(...cinza)
+    doc.text(
+      'MarcenariaPro - Relatório gerado pelo sistema',
+      14,
+      altura - 9
+    )
+
+    doc.text(
+      `Página ${pagina} de ${totalPaginas}`,
+      196,
+      altura - 9,
+      { align: 'right' }
+    )
+  }
+
+  const nomeArquivo = filtroAplicado.inicio
+    ? `relatorio-marcenariapro-${filtroAplicado.inicio}-a-${filtroAplicado.fim}.pdf`
+    : 'relatorio-marcenariapro.pdf'
+
+  doc.save(nomeArquivo)
+}
 
   function aplicarPeriodoPersonalizado() {
     if (!inicio || !fim) {
@@ -299,13 +535,23 @@ function Relatorios() {
           </p>
         </div>
 
-        <button
-          className="relatorios-atualizar"
-          onClick={() => carregarRelatorios(filtroAplicado)}
-          disabled={carregando}
-        >
-          {carregando ? 'Atualizando...' : '↻ Atualizar dados'}
-        </button>
+        <div className="relatorios-acoes-header">
+  <button
+    className="relatorios-exportar"
+    onClick={exportarPDF}
+    disabled={carregando || !resumo}
+  >
+    ↓ Exportar PDF
+  </button>
+
+  <button
+    className="relatorios-atualizar"
+    onClick={() => carregarRelatorios(filtroAplicado)}
+    disabled={carregando}
+  >
+    {carregando ? 'Atualizando...' : '↻ Atualizar dados'}
+  </button>
+</div>
       </header>
 
       {erro && (
