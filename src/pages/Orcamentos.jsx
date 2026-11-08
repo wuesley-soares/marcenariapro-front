@@ -132,6 +132,44 @@ async function carregarDetalhes(id, dadosIniciais = null) {
   }
 }
 
+async function alterarStatusOrcamento(orcamento, novoStatus) {
+  const acao = novoStatus === 'APROVADO' ? 'aprovar' : 'cancelar'
+
+  const confirmar = window.confirm(
+    `Deseja realmente ${acao} este orçamento?`
+  )
+
+  if (!confirmar) return
+
+  try {
+    const dados = {
+      valorMaoObra: Number(orcamento.valorMaoObra || 0),
+      margemLucro: Number(orcamento.margemLucro || 0),
+      descricao: orcamento.descricao || '',
+      status: novoStatus,
+      ambienteId: Number(orcamento.ambienteId)
+    }
+
+    await api.put(`/orcamentos/${orcamento.id}`, dados)
+
+    alert(
+      novoStatus === 'APROVADO'
+        ? 'Orçamento aprovado com sucesso!'
+        : 'Orçamento cancelado com sucesso!'
+    )
+
+    await carregarOrcamentos()
+
+  } catch (error) {
+    console.error('Erro ao alterar status:', error)
+
+    alert(
+      error.response?.data?.message ||
+      'Erro ao alterar o status do orçamento.'
+    )
+  }
+}
+
   function novoOrcamento() {
     setOrcamentoSelecionado(null)
     setItensMateriais([])
@@ -974,22 +1012,46 @@ async function carregarDetalhes(id, dadosIniciais = null) {
                     <td>{orcamento.descricao || '-'}</td>
 
                     <td>
-                      <div className="acoes">
-                        <button
-                          className="botao-abrir"
-                          onClick={() => abrirOrcamento(orcamento)}
-                        >
-                          Abrir / Editar
-                        </button>
+  <div className="acoes">
 
-                        <button
-                          className="botao-excluir"
-                          onClick={() => excluirOrcamento(orcamento.id)}
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </td>
+    <button
+      className="botao-abrir"
+      onClick={() => abrirOrcamento(orcamento)}
+    >
+      Abrir / Editar
+    </button>
+
+    {orcamento.status === 'PENDENTE' && (
+      <>
+        <button
+          className="botao-aprovar"
+          onClick={() =>
+            alterarStatusOrcamento(orcamento, 'APROVADO')
+          }
+        >
+          Aprovar
+        </button>
+
+        <button
+          className="botao-excluir"
+          onClick={() =>
+            alterarStatusOrcamento(orcamento, 'RECUSADO')
+          }
+        >
+          Cancelar
+        </button>
+      </>
+    )}
+
+    <button
+      className="botao-excluir"
+      onClick={() => excluirOrcamento(orcamento.id)}
+    >
+      Excluir
+    </button>
+
+  </div>
+</td>
                   </tr>
                 ))}
               </tbody>

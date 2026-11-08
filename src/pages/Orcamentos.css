@@ -724,3 +724,22 @@
     width: 100%;
   }
 }
+.acoes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.acoes button {
+  white-space: nowrap;
+}
+
+.botao-aprovar {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.botao-aprovar:hover {
+  background-color: #bbf7d0;
+}
