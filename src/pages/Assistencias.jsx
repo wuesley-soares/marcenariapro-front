@@ -8,6 +8,10 @@ function Assistencias() {
   const [pedidos, setPedidos] = useState([])
   const [usuarios, setUsuarios] = useState([])
   const [materiais, setMateriais] = useState([])
+  const [imagens, setImagens] = useState([])
+const [arquivoImagem, setArquivoImagem] = useState(null)
+const [etapaImagem, setEtapaImagem] = useState('PROBLEMA')
+const [carregandoImagens, setCarregandoImagens] = useState(false)
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [mostrarMateriais, setMostrarMateriais] = useState(false)
@@ -282,6 +286,105 @@ function Assistencias() {
     }
   }
 
+  async function carregarImagens(assistenciaId) {
+  setCarregandoImagens(true)
+
+  try {
+    const resposta = await api.get(
+      `/assistencias-tecnicas/${assistenciaId}/imagens`
+    )
+
+    const imagensComArquivo = await Promise.all(
+      resposta.data.map(async imagem => {
+        const arquivo = await api.get(
+          `/assistencias-tecnicas/${assistenciaId}/imagens/${imagem.id}/arquivo`,
+          { responseType: 'blob' }
+        )
+
+        return {
+          ...imagem,
+          url: URL.createObjectURL(arquivo.data)
+        }
+      })
+    )
+
+    setImagens(imagensComArquivo)
+  } catch (error) {
+    console.error('Erro ao carregar imagens:', error)
+    alert('Não foi possível carregar as imagens.')
+  } finally {
+    setCarregandoImagens(false)
+  }
+}
+
+async function enviarImagem(event) {
+  event.preventDefault()
+
+  if (!arquivoImagem || !assistenciaSelecionada) {
+    alert('Selecione uma imagem.')
+    return
+  }
+
+  const formularioImagem = new FormData()
+  formularioImagem.append('arquivo', arquivoImagem)
+  formularioImagem.append('etapa', etapaImagem)
+
+  try {
+    await api.post(
+      `/assistencias-tecnicas/${assistenciaSelecionada.id}/imagens`,
+      formularioImagem
+    )
+
+    setArquivoImagem(null)
+
+    const campoArquivo = document.getElementById('arquivo-imagem-assistencia')
+
+    if (campoArquivo) {
+      campoArquivo.value = ''
+    }
+
+    await carregarImagens(assistenciaSelecionada.id)
+
+    alert('Imagem enviada com sucesso!')
+  } catch (error) {
+    console.error('Erro ao enviar imagem:', error)
+
+    alert(
+      error.response?.data?.message ||
+      'Não foi possível enviar a imagem.'
+    )
+  }
+}
+
+async function excluirImagem(imagem) {
+  const confirmar = window.confirm(
+    'Deseja realmente excluir esta imagem?'
+  )
+
+  if (!confirmar) return
+
+  try {
+    await api.delete(
+      `/assistencias-tecnicas/${assistenciaSelecionada.id}/imagens/${imagem.id}`
+    )
+
+    URL.revokeObjectURL(imagem.url)
+
+    setImagens(imagensAtuais =>
+      imagensAtuais.filter(item => item.id !== imagem.id)
+    )
+
+    alert('Imagem excluída com sucesso!')
+  } catch (error) {
+    console.error('Erro ao excluir imagem:', error)
+
+    alert(
+      error.response?.data?.message ||
+      'Não foi possível excluir a imagem.'
+    )
+  }
+}
+
   async function abrirMateriais(assistencia) {
     try {
       const resposta =
@@ -298,6 +401,8 @@ function Assistencias() {
       })
 
       setMostrarMateriais(true)
+
+      await carregarImagens(assistencia.id)
 
     } catch (error) {
       console.error(
@@ -322,6 +427,14 @@ function Assistencias() {
       materialId: '',
       quantidade: ''
     })
+
+    imagens.forEach(imagem => {
+  URL.revokeObjectURL(imagem.url)
+})
+
+setImagens([])
+setArquivoImagem(null)
+setEtapaImagem('PROBLEMA')
   }
 
   async function adicionarMaterial(event) {
@@ -390,7 +503,7 @@ function Assistencias() {
 
   async function excluirMaterial(item) {
   const confirmar = window.confirm(
-    'Deseja remover este material da assistência? A quantidade será devolvida ao estoque.'
+    'Deseja remover este material da assistência?'
   )
 
   if (!confirmar) {
@@ -403,7 +516,7 @@ function Assistencias() {
     )
 
     alert(
-      'Material removido e devolvido ao estoque!'
+      'Material removido da assistência com sucesso!'
     )
 
     const respostaMateriais =
@@ -466,43 +579,29 @@ function Assistencias() {
     )
   }
 
-  function textoStatus(status) {
-    switch (status) {
-      case 'ABERTA':
-        return 'Aberta'
-
-      case 'EM_ANALISE':
-        return 'Em análise'
-
-      case 'RESOLVIDA':
-        return 'Resolvida'
-
-      case 'CANCELADA':
-        return 'Cancelada'
-
-      default:
-        return status
-    }
+ function textoStatus(status) {
+  const nomes = {
+    ABERTA: 'Aberta',
+    AGENDADA: 'Agendada',
+    EM_ANDAMENTO: 'Em andamento',
+    CONCLUIDA: 'Concluída',
+    CANCELADA: 'Cancelada'
   }
 
-  function classeStatus(status) {
-    switch (status) {
-      case 'ABERTA':
-        return 'status-aberta'
+  return nomes[status] || status
+}
 
-      case 'EM_ANALISE':
-        return 'status-analise'
-
-      case 'RESOLVIDA':
-        return 'status-resolvida'
-
-      case 'CANCELADA':
-        return 'status-cancelada'
-
-      default:
-        return ''
-    }
+function classeStatus(status) {
+  const classes = {
+    ABERTA: 'status-aberta',
+    AGENDADA: 'status-agendada',
+    EM_ANDAMENTO: 'status-andamento',
+    CONCLUIDA: 'status-concluida',
+    CANCELADA: 'status-cancelada'
   }
+
+  return classes[status] || ''
+}
 
   return (
     <div className="assistencias">
@@ -655,21 +754,11 @@ function Assistencias() {
                   onChange={alterarCampo}
                   required
                 >
-                  <option value="ABERTA">
-                    Aberta
-                  </option>
-
-                  <option value="EM_ANALISE">
-                    Em análise
-                  </option>
-
-                  <option value="RESOLVIDA">
-                    Resolvida
-                  </option>
-
-                  <option value="CANCELADA">
-                    Cancelada
-                  </option>
+                    <option value="ABERTA">Aberta</option>
+                    <option value="AGENDADA">Agendada</option>
+                    <option value="EM_ANDAMENTO">Em andamento</option>
+                    <option value="CONCLUIDA">Concluída</option>
+                    <option value="CANCELADA">Cancelada</option>
                 </select>
               </div>
 
@@ -1092,6 +1181,213 @@ function Assistencias() {
               )}
 
             </div>
+
+            <div className="secao-imagens">
+
+  <div className="secao-imagens-header">
+    <div>
+      <h3>Imagens da assistência</h3>
+      <p>
+        Registre o problema e o resultado do atendimento.
+      </p>
+    </div>
+  </div>
+
+  <div className="upload-imagens">
+
+    <form onSubmit={enviarImagem}>
+
+      <div>
+        <label>Etapa da imagem</label>
+
+        <select
+          value={etapaImagem}
+          onChange={event => setEtapaImagem(event.target.value)}
+        >
+          <option
+            value="PROBLEMA"
+            disabled={
+              !['ABERTA', 'AGENDADA'].includes(
+                assistenciaSelecionada.status
+              )
+            }
+          >
+            Fotos do problema
+          </option>
+
+          <option
+            value="APOS_ASSISTENCIA"
+            disabled={
+              assistenciaSelecionada.status !== 'CONCLUIDA'
+            }
+          >
+            Fotos após a assistência
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label>Selecionar imagens</label>
+
+        <input
+          id="arquivo-imagem-assistencia"
+          type="file"
+          accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+          onChange={event => {
+            const arquivo = event.target.files[0]
+
+            if (!arquivo) return
+
+            if (arquivo.size > 5 * 1024 * 1024) {
+              alert('A imagem deve ter no máximo 5 MB.')
+              event.target.value = ''
+              setArquivoImagem(null)
+              return
+            }
+
+            setArquivoImagem(arquivo)
+          }}
+          required
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="botao-enviar-imagem"
+        disabled={!arquivoImagem}
+      >
+        Enviar imagem
+      </button>
+
+    </form>
+
+    <small>
+      Formatos aceitos: JPG, JPEG e PNG. Limite de 5 MB por imagem.
+    </small>
+
+  </div>
+
+  {carregandoImagens ? (
+
+    <p className="mensagem-imagens">
+      Carregando imagens...
+    </p>
+
+  ) : (
+
+    <>
+      <div className="galeria-imagens">
+
+        <h4>Fotos do problema</h4>
+
+        <div className="imagens-grid">
+
+          {imagens.filter(
+            imagem => imagem.etapa === 'PROBLEMA'
+          ).length === 0 ? (
+
+            <p className="sem-imagens">
+              Nenhuma imagem do problema cadastrada.
+            </p>
+
+          ) : (
+
+            imagens
+              .filter(imagem => imagem.etapa === 'PROBLEMA')
+              .map(imagem => (
+                <div className="imagem-card" key={imagem.id}>
+
+                  <a
+                    href={imagem.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Visualizar imagem"
+                  >
+                    <img
+                      src={imagem.url}
+                      alt={imagem.nomeOriginal}
+                    />
+                  </a>
+
+                  <span title={imagem.nomeOriginal}>
+                    {imagem.nomeOriginal}
+                  </span>
+
+                  <button
+                    type="button"
+                    className="botao-excluir-imagem"
+                    onClick={() => excluirImagem(imagem)}
+                  >
+                    Excluir
+                  </button>
+
+                </div>
+              ))
+
+          )}
+
+        </div>
+
+      </div>
+
+      <div className="galeria-imagens">
+
+        <h4>Fotos após a assistência</h4>
+
+        <div className="imagens-grid">
+
+          {imagens.filter(
+            imagem => imagem.etapa === 'APOS_ASSISTENCIA'
+          ).length === 0 ? (
+
+            <p className="sem-imagens">
+              Nenhuma imagem após a assistência cadastrada.
+            </p>
+
+          ) : (
+
+            imagens
+              .filter(imagem => imagem.etapa === 'APOS_ASSISTENCIA')
+              .map(imagem => (
+                <div className="imagem-card" key={imagem.id}>
+
+                  <a
+                    href={imagem.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Visualizar imagem"
+                  >
+                    <img
+                      src={imagem.url}
+                      alt={imagem.nomeOriginal}
+                    />
+                  </a>
+
+                  <span title={imagem.nomeOriginal}>
+                    {imagem.nomeOriginal}
+                  </span>
+
+                  <button
+                    type="button"
+                    className="botao-excluir-imagem"
+                    onClick={() => excluirImagem(imagem)}
+                  >
+                    Excluir
+                  </button>
+
+                </div>
+              ))
+
+          )}
+
+        </div>
+
+      </div>
+    </>
+
+  )}
+
+</div>
 
             <div className="modal-footer">
 
