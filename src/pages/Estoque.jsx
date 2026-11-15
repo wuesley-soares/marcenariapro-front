@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import './Estoque.css'
@@ -5,6 +6,7 @@ import './Estoque.css'
 function Estoque() {
   const [materiais, setMateriais] = useState([])
   const [movimentacoes, setMovimentacoes] = useState([])
+  const [necessidades, setNecessidades] = useState([])
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [mostrarMovimentacao, setMostrarMovimentacao] = useState(false)
@@ -31,15 +33,28 @@ function Estoque() {
 
   async function carregarDados() {
     try {
-      const [respostaMateriais, respostaMovimentacoes] = await Promise.all([
+      const [
+        respostaMateriais,
+        respostaMovimentacoes,
+        respostaNecessidades
+      ] = await Promise.all([
         api.get('/materiais'),
-        api.get('/movimentacoes-estoque')
+        api.get('/movimentacoes-estoque'),
+        api.get('/necessidades-compra')
       ])
 
-      setMateriais(respostaMateriais.data)
-      setMovimentacoes(respostaMovimentacoes.data)
+      setMateriais(respostaMateriais.data || [])
+      setMovimentacoes(respostaMovimentacoes.data || [])
+      setNecessidades(respostaNecessidades.data || [])
     } catch (error) {
-      console.error('Erro ao carregar estoque:', error)
+      console.error('Erro ao carregar dados do estoque:', error)
+
+      const mensagem =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        'Não foi possível carregar os dados do estoque.'
+
+      alert(mensagem)
     }
   }
 
@@ -123,7 +138,7 @@ function Estoque() {
       }
 
       cancelarFormulario()
-      carregarDados()
+      await carregarDados()
     } catch (error) {
       console.error('Erro ao salvar material:', error)
 
@@ -148,7 +163,7 @@ function Estoque() {
 
       alert('Material excluído com sucesso!')
 
-      carregarDados()
+      await carregarDados()
     } catch (error) {
       console.error('Erro ao excluir material:', error)
 
@@ -196,7 +211,9 @@ function Estoque() {
       alert('Movimentação registrada com sucesso!')
 
       cancelarMovimentacao()
-      carregarDados()
+
+      // Atualiza materiais, movimentações e necessidades de compra.
+      await carregarDados()
     } catch (error) {
       console.error('Erro ao registrar movimentação:', error)
 
@@ -213,6 +230,12 @@ function Estoque() {
     return Number(valor || 0).toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL'
+    })
+  }
+
+  function formatarQuantidade(quantidade) {
+    return Number(quantidade || 0).toLocaleString('pt-BR', {
+      maximumFractionDigits: 2
     })
   }
 
@@ -235,12 +258,55 @@ function Estoque() {
     )
   }
 
-function textoTipo(tipo) {
-  if (tipo === 'ENTRADA') return 'Entrada'
-  if (tipo === 'SAIDA') return 'Saída'
+  function textoTipo(tipo) {
+    if (tipo === 'ENTRADA') return 'Entrada'
+    if (tipo === 'SAIDA') return 'Saída'
 
-  return 'Desconhecido'
-}
+    return 'Desconhecido'
+  }
+
+  function textoStatusNecessidade(status) {
+    if (status === 'ABERTA') return 'Pendente'
+    if (status === 'PARCIAL') return 'Parcial'
+    if (status === 'ATENDIDA') return 'Atendida'
+    if (status === 'CANCELADA') return 'Cancelada'
+
+    return status || '-'
+  }
+
+  function classeStatusNecessidade(status) {
+    if (status === 'ABERTA') return 'status-necessidade-aberta'
+    if (status === 'PARCIAL') return 'status-necessidade-parcial'
+    if (status === 'ATENDIDA') return 'status-necessidade-atendida'
+    if (status === 'CANCELADA') return 'status-necessidade-cancelada'
+
+    return ''
+  }
+
+  function textoOrigemNecessidade(necessidade) {
+    if (necessidade.itemProducaoId) {
+      return `Produção #${necessidade.itemProducaoId}`
+    }
+
+    if (necessidade.itemAssistenciaId) {
+      return `Assistência #${necessidade.itemAssistenciaId}`
+    }
+
+    return '-'
+  }
+
+  // Exibe somente necessidades que ainda possuem material pendente.
+  const necessidadesAtivas = necessidades.filter(
+    (necessidade) =>
+      necessidade.status === 'ABERTA' ||
+      necessidade.status === 'PARCIAL'
+  )
+
+  const totalQuantidadePendente = necessidadesAtivas.reduce(
+    (total, necessidade) =>
+      total + Number(necessidade.quantidadePendente || 0),
+    0
+  )
 
   return (
     <div className="estoque">
@@ -439,6 +505,7 @@ function textoTipo(tipo) {
                   value={formularioMovimentacao.quantidade}
                   onChange={alterarCampoMovimentacao}
                   min="1"
+                  step="1"
                   required
                 />
               </div>
@@ -480,6 +547,14 @@ function textoTipo(tipo) {
           </strong>
         </div>
 
+        <div className="resumo-card resumo-card-pendencias">
+          <span>Necessidades de compra</span>
+          <strong>{necessidadesAtivas.length}</strong>
+          <small>
+            {formatarQuantidade(totalQuantidadePendente)} unidades pendentes
+          </small>
+        </div>
+
         <div className="resumo-card">
           <span>Movimentações</span>
           <strong>{movimentacoes.length}</strong>
@@ -487,159 +562,279 @@ function textoTipo(tipo) {
 
       </div>
 
+      {/* NECESSIDADES DE COMPRA */}
       <div className="estoque-tabela">
 
-        <h2>Materiais</h2>
-         <div className="estoque-tabela-scroll">
-        <table>
+        <div className="estoque-secao-header">
+          <div>
+            <h2>Materiais pendentes de compra</h2>
+            <p>
+              Materiais que ainda precisam ser recebidos para liberar
+              a produção ou atender às assistências técnicas.
+            </p>
+          </div>
 
-          <thead>
-            <tr>
-              <th>Material</th>
-              <th>Descrição</th>
-              <th>Quantidade</th>
-              <th>Estoque mínimo</th>
-              <th>Valor unitário</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
+          <span className="contador-pendencias">
+            {necessidadesAtivas.length} pendente(s)
+          </span>
+        </div>
 
-          <tbody>
+        <div className="estoque-tabela-scroll">
+          <table className="tabela-necessidades">
 
-            {materiais.map((material) => (
-
-              <tr key={material.id}>
-
-                <td>{material.nome}</td>
-
-                <td>
-                  {material.descricao || '-'}
-                </td>
-
-                <td>
-                  {material.quantidade}
-                </td>
-
-                <td>
-                  {material.estoqueMinimo}
-                </td>
-
-                <td>
-                  {formatarValor(material.valorUnitario)}
-                </td>
-
-                <td>
-
-                  {estoqueBaixo(material) ? (
-                    <span className="status-baixo">
-                      Estoque baixo
-                    </span>
-                  ) : (
-                    <span className="status-normal">
-                      Normal
-                    </span>
-                  )}
-
-                </td>
-
-                <td>
-
-                  <div className="acoes">
-
-                    <button
-                      className="botao-editar"
-                      onClick={() => editarMaterial(material)}
-                    >
-                      Editar
-                    </button>
-
-                    <button
-                      className="botao-excluir"
-                      onClick={() => excluirMaterial(material.id)}
-                    >
-                      Excluir
-                    </button>
-
-                  </div>
-
-                </td>
-
+            <thead>
+              <tr>
+                <th>Material</th>
+                <th>Origem</th>
+                <th>Quantidade necessária</th>
+                <th>Quantidade recebida</th>
+                <th>Quantidade pendente</th>
+                <th>Data</th>
+                <th>Status</th>
               </tr>
+            </thead>
 
-            ))}
+            <tbody>
+              {necessidadesAtivas.length > 0 ? (
+                necessidadesAtivas.map((necessidade) => (
+                  <tr key={necessidade.id}>
 
-          </tbody>
+                    <td className="celula-material">
+                      {necessidade.materialNome || '-'}
+                    </td>
 
-        </table>
+                    <td>
+                      {textoOrigemNecessidade(necessidade)}
+                    </td>
+
+                    <td>
+                      {formatarQuantidade(
+                        necessidade.quantidadeNecessaria
+                      )}
+                    </td>
+
+                    <td>
+                      {formatarQuantidade(
+                        necessidade.quantidadeAtendida
+                      )}
+                    </td>
+
+                    <td className="quantidade-pendente">
+                      {formatarQuantidade(
+                        necessidade.quantidadePendente
+                      )}
+                    </td>
+
+                    <td>
+                      {formatarData(necessidade.dataCriacao)}
+                    </td>
+
+                    <td>
+                      <span
+                        className={`status-necessidade ${classeStatusNecessidade(
+                          necessidade.status
+                        )}`}
+                      >
+                        {textoStatusNecessidade(necessidade.status)}
+                      </span>
+                    </td>
+
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="tabela-vazia">
+                    <span className="tabela-vazia-titulo">
+                      Nenhuma necessidade de compra pendente
+                    </span>
+                    <span>
+                      Quando faltar material para uma produção ou assistência,
+                      a necessidade aparecerá nesta seção.
+                    </span>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+
+          </table>
         </div>
 
       </div>
 
+      {/* MATERIAIS */}
+      <div className="estoque-tabela">
+
+        <h2>Materiais</h2>
+
+        <div className="estoque-tabela-scroll">
+          <table>
+
+            <thead>
+              <tr>
+                <th>Material</th>
+                <th>Descrição</th>
+                <th>Quantidade</th>
+                <th>Estoque mínimo</th>
+                <th>Valor unitário</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              {materiais.length > 0 ? (
+                materiais.map((material) => (
+
+                  <tr key={material.id}>
+
+                    <td>{material.nome}</td>
+
+                    <td>
+                      {material.descricao || '-'}
+                    </td>
+
+                    <td>
+                      {material.quantidade}
+                    </td>
+
+                    <td>
+                      {material.estoqueMinimo}
+                    </td>
+
+                    <td>
+                      {formatarValor(material.valorUnitario)}
+                    </td>
+
+                    <td>
+
+                      {estoqueBaixo(material) ? (
+                        <span className="status-baixo">
+                          Estoque baixo
+                        </span>
+                      ) : (
+                        <span className="status-normal">
+                          Normal
+                        </span>
+                      )}
+
+                    </td>
+
+                    <td>
+
+                      <div className="acoes">
+
+                        <button
+                          className="botao-editar"
+                          onClick={() => editarMaterial(material)}
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          className="botao-excluir"
+                          onClick={() => excluirMaterial(material.id)}
+                        >
+                          Excluir
+                        </button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="tabela-vazia">
+                    Nenhum material cadastrado.
+                  </td>
+                </tr>
+              )}
+
+            </tbody>
+
+          </table>
+        </div>
+
+      </div>
+
+      {/* HISTÓRICO DE MOVIMENTAÇÕES */}
       <div className="estoque-tabela">
 
         <h2>Histórico de movimentações</h2>
+
         <div className="estoque-tabela-scroll">
 
-        <table>
+          <table>
 
-          <thead>
-            <tr>
-              <th>Movimentação</th>
-              <th>Material</th>
-              <th>Tipo</th>
-              <th>Quantidade</th>
-              <th>Data</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            {movimentacoes.map((movimentacao) => (
-
-              <tr key={movimentacao.id}>
-
-                <td>
-                  #{movimentacao.id}
-                </td>
-
-                <td>
-                  {movimentacao.materialNome ||
-                    encontrarMaterial(movimentacao.materialId)?.nome ||
-                    `Material #${movimentacao.materialId}`}
-                </td>
-
-                <td>
-
-                  <span
-                    className={
-                      movimentacao.tipo === 'ENTRADA'
-                        ? 'tipo-entrada'
-                        : 'tipo-saida'
-                    }
-                  >
-                    {textoTipo(movimentacao.tipo)}
-                  </span>
-
-                </td>
-
-                <td>
-                  {movimentacao.quantidade}
-                </td>
-
-                <td>
-                  {formatarData(
-                    movimentacao.dataMovimentacao
-                  )}
-                </td>
-
+            <thead>
+              <tr>
+                <th>Movimentação</th>
+                <th>Material</th>
+                <th>Tipo</th>
+                <th>Quantidade</th>
+                <th>Data</th>
               </tr>
+            </thead>
 
-            ))}
+            <tbody>
 
-          </tbody>
+              {movimentacoes.length > 0 ? (
+                movimentacoes.map((movimentacao) => (
 
-        </table>
+                  <tr key={movimentacao.id}>
+
+                    <td>
+                      #{movimentacao.id}
+                    </td>
+
+                    <td>
+                      {movimentacao.materialNome ||
+                        encontrarMaterial(movimentacao.materialId)?.nome ||
+                        `Material #${movimentacao.materialId}`}
+                    </td>
+
+                    <td>
+
+                      <span
+                        className={
+                          movimentacao.tipo === 'ENTRADA'
+                            ? 'tipo-entrada'
+                            : 'tipo-saida'
+                        }
+                      >
+                        {textoTipo(movimentacao.tipo)}
+                      </span>
+
+                    </td>
+
+                    <td>
+                      {movimentacao.quantidade}
+                    </td>
+
+                    <td>
+                      {formatarData(
+                        movimentacao.dataMovimentacao
+                      )}
+                    </td>
+
+                  </tr>
+
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="tabela-vazia">
+                    Nenhuma movimentação registrada.
+                  </td>
+                </tr>
+              )}
+
+            </tbody>
+
+          </table>
+
         </div>
 
       </div>

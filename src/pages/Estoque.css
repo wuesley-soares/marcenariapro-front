@@ -1,6 +1,9 @@
+
 .estoque {
   padding: 30px;
 }
+
+/* CABEÇALHO */
 
 .estoque-header {
   display: flex;
@@ -52,6 +55,8 @@
 .botao-movimentacao:hover {
   background: #f1f5ff;
 }
+
+/* FORMULÁRIOS */
 
 .estoque-formulario {
   background: white;
@@ -140,9 +145,11 @@
   color: white;
 }
 
+/* RESUMO */
+
 .estoque-resumo {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 15px;
   margin-bottom: 25px;
 }
@@ -166,13 +173,26 @@
   color: #222;
 }
 
+.resumo-card small {
+  display: block;
+  margin-top: 7px;
+  color: #777;
+  font-size: 12px;
+}
+
+.resumo-card-pendencias strong {
+  color: #c27a13;
+}
+
+/* TABELAS */
+
 .estoque-tabela {
   background: white;
   border: 1px solid #e1e5eb;
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 25px;
-  overflow-x: auto;
+  overflow: hidden;
 }
 
 .estoque-tabela h2 {
@@ -194,6 +214,7 @@
   text-align: left;
   padding: 13px;
   border-bottom: 1px solid #e1e5eb;
+  white-space: nowrap;
 }
 
 .estoque-tabela td {
@@ -206,6 +227,112 @@
 .estoque-tabela tr:last-child td {
   border-bottom: none;
 }
+
+.estoque-tabela-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.estoque-tabela-scroll table {
+  min-width: 750px;
+}
+
+/* CABEÇALHO DA SEÇÃO DE NECESSIDADES */
+
+.estoque-secao-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.estoque-secao-header h2 {
+  margin: 0 0 7px;
+}
+
+.estoque-secao-header p {
+  margin: 0;
+  color: #777;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.contador-pendencias {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 11px;
+  border-radius: 20px;
+  background: #fff3cd;
+  color: #856404;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tabela-necessidades {
+  min-width: 950px !important;
+}
+
+.tabela-necessidades .celula-material {
+  font-weight: 600;
+  color: #333;
+}
+
+.quantidade-pendente {
+  color: #c27a13 !important;
+  font-weight: 600;
+}
+
+/* STATUS DAS NECESSIDADES */
+
+.status-necessidade {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-necessidade-aberta {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-necessidade-parcial {
+  background: #e8f1ff;
+  color: #245dcc;
+}
+
+.status-necessidade-atendida {
+  background: #eaf7ee;
+  color: #218739;
+}
+
+.status-necessidade-cancelada {
+  background: #f1f1f1;
+  color: #666;
+}
+
+/* TABELA VAZIA */
+
+.tabela-vazia {
+  text-align: center;
+  padding: 25px 15px !important;
+  color: #777 !important;
+}
+
+.tabela-vazia-titulo {
+  display: block;
+  color: #444;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+/* AÇÕES */
 
 .acoes {
   display: flex;
@@ -231,6 +358,8 @@
   color: #d93025;
 }
 
+/* STATUS DO ESTOQUE */
+
 .status-normal,
 .status-baixo,
 .tipo-entrada,
@@ -240,6 +369,7 @@
   border-radius: 12px;
   font-size: 12px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .status-normal {
@@ -262,13 +392,17 @@
   color: #d93025;
 }
 
+/* RESPONSIVIDADE */
+
+@media (max-width: 1100px) {
+  .estoque-resumo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 992px) {
   .estoque {
     padding: 20px;
-  }
-
-  .estoque-resumo {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .campos-linha {
@@ -338,6 +472,15 @@
     font-size: 17px;
   }
 
+  .estoque-secao-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .contador-pendencias {
+    align-self: flex-start;
+  }
+
   .formulario-botoes {
     flex-direction: column-reverse;
   }
@@ -349,18 +492,4 @@
   .acoes {
     flex-wrap: wrap;
   }
-}
-
-.estoque-tabela table {
-  min-width: 700px;
-}
-
-.estoque-tabela-scroll {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.estoque-tabela-scroll table {
-  min-width: 750px;
 }
