@@ -23,6 +23,11 @@ function Relatorios() {
     fim: ''
   })
 
+  const [vendasMensais, setVendasMensais] = useState([])
+const [recebimentosMensais, setRecebimentosMensais] = useState([])
+const [pedidosMensais, setPedidosMensais] = useState([])
+const [materiaisSaidas, setMateriaisSaidas] = useState([])
+
   function formatarDataLocal(data) {
     const ano = data.getFullYear()
     const mes = String(data.getMonth() + 1).padStart(2, '0')
@@ -89,7 +94,32 @@ function Relatorios() {
         url: '/relatorios/assistencias-status',
         setter: setAssistencias,
         config: configuracao
-      }
+      },
+
+      {
+  nome: 'vendas mensais',
+  url: '/relatorios/vendas-mensais',
+  setter: setVendasMensais,
+  config: configuracao
+},
+{
+  nome: 'recebimentos mensais',
+  url: '/relatorios/recebimentos-mensais',
+  setter: setRecebimentosMensais,
+  config: configuracao
+},
+{
+  nome: 'pedidos mensais',
+  url: '/relatorios/pedidos-mensais',
+  setter: setPedidosMensais,
+  config: configuracao
+},
+{
+  nome: 'saídas de materiais',
+  url: '/relatorios/materiais-saidas',
+  setter: setMateriaisSaidas,
+  config: configuracao
+} 
     ]
 
     try {
@@ -340,6 +370,78 @@ function Relatorios() {
     y
   )
 
+    // Vendas mensais
+if (y > 240) {
+  doc.addPage()
+  y = 20
+}
+
+adicionarTitulo('9. Vendas por mês', y)
+y += 7
+
+y = adicionarTabela(
+  ['Período', 'Valor das vendas'],
+  vendasMensais.map(item => [
+    formatarMes(item.mes, item.ano),
+    valorMonetario(item.valor)
+  ]),
+  y
+)
+
+// Recebimentos mensais
+if (y > 240) {
+  doc.addPage()
+  y = 20
+}
+
+adicionarTitulo('10. Recebimentos por mês', y)
+y += 7
+
+y = adicionarTabela(
+  ['Período', 'Valor recebido'],
+  recebimentosMensais.map(item => [
+    formatarMes(item.mes, item.ano),
+    valorMonetario(item.valor)
+  ]),
+  y
+)
+
+// Evolução de pedidos
+if (y > 240) {
+  doc.addPage()
+  y = 20
+}
+
+adicionarTitulo('11. Evolução de pedidos', y)
+y += 7
+
+y = adicionarTabela(
+  ['Período', 'Quantidade de pedidos'],
+  pedidosMensais.map(item => [
+    formatarMes(item.mes, item.ano),
+    numero(item.quantidade)
+  ]),
+  y
+)
+
+// Materiais com mais saídas
+if (y > 240) {
+  doc.addPage()
+  y = 20
+}
+
+adicionarTitulo('12. Materiais com mais saídas', y)
+y += 7
+
+y = adicionarTabela(
+  ['Material', 'Quantidade de saídas'],
+  materiaisSaidas.map(item => [
+    item.material || '-',
+    numero(item.quantidadeSaida)
+  ]),
+  y
+)
+
   // Rodapé e numeração de páginas
   const totalPaginas = doc.internal.getNumberOfPages()
 
@@ -372,6 +474,16 @@ function Relatorios() {
     : 'relatorio-marcenariapro.pdf'
 
   doc.save(nomeArquivo)
+
+      function formatarMes(mes, ano) {
+  const meses = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril',
+    'Maio', 'Junho', 'Julho', 'Agosto',
+    'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ]
+
+  return `${meses[Number(mes) - 1] || mes}/${ano}`
+}
 }
 
   function aplicarPeriodoPersonalizado() {
@@ -465,6 +577,8 @@ function Relatorios() {
         </p>
       )
     }
+
+
 
     const total = dados.reduce(
       (soma, item) => soma + Number(item.quantidade || 0),
@@ -825,8 +939,158 @@ function Relatorios() {
               </div>
             )}
           </article>
+
+          <article className="relatorios-painel">
+  <div className="relatorios-painel-titulo">
+    <div>
+      <h3>Materiais com mais saídas</h3>
+      <p>
+        Quantidade registrada nas movimentações de saída do estoque.
+      </p>
+    </div>
+
+    <span className="relatorios-contador">
+      {materiaisSaidas.length}
+    </span>
+  </div>
+
+  {!materiaisSaidas.length ? (
+    <p className="relatorios-vazio">
+      Nenhuma movimentação de saída disponível.
+    </p>
+  ) : (
+    <div className="relatorios-tabela-container">
+      <table className="relatorios-tabela">
+        <thead>
+          <tr>
+            <th>Material</th>
+            <th>Quantidade de saídas</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {materiaisSaidas.map((item) => (
+            <tr key={item.materialId}>
+              <td><strong>{item.material}</strong></td>
+              <td>{numero(item.quantidadeSaida)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</article>
         </div>
       </section>
+
+      <section className="relatorios-secao">
+  <div className="relatorios-secao-titulo">
+    <div>
+      <h2>Evolução mensal</h2>
+      <p>Detalhamento das vendas, recebimentos e pedidos por mês.</p>
+    </div>
+  </div>
+
+  <div className="relatorios-grid">
+    <article className="relatorios-painel">
+      <div className="relatorios-painel-titulo">
+        <div>
+          <h3>Vendas por mês</h3>
+          <p>Valores dos pedidos registrados em cada mês.</p>
+        </div>
+      </div>
+
+      {!vendasMensais.length ? (
+        <p className="relatorios-vazio">Nenhum dado disponível.</p>
+      ) : (
+        <div className="relatorios-tabela-container">
+          <table className="relatorios-tabela">
+            <thead>
+              <tr>
+                <th>Período</th>
+                <th>Valor das vendas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {vendasMensais.map((item, indice) => (
+                <tr key={`${item.ano}-${item.mes}-${indice}`}>
+                  <td>{formatarMes(item.mes, item.ano)}</td>
+                  <td>{valorMonetario(item.valor)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </article>
+
+    <article className="relatorios-painel">
+      <div className="relatorios-painel-titulo">
+        <div>
+          <h3>Recebimentos por mês</h3>
+          <p>Valores efetivamente recebidos em cada mês.</p>
+        </div>
+      </div>
+
+      {!recebimentosMensais.length ? (
+        <p className="relatorios-vazio">Nenhum dado disponível.</p>
+      ) : (
+        <div className="relatorios-tabela-container">
+          <table className="relatorios-tabela">
+            <thead>
+              <tr>
+                <th>Período</th>
+                <th>Valor recebido</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recebimentosMensais.map((item, indice) => (
+                <tr key={`${item.ano}-${item.mes}-${indice}`}>
+                  <td>{formatarMes(item.mes, item.ano)}</td>
+                  <td className="relatorios-valor-pago">
+                    {valorMonetario(item.valor)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </article>
+
+    <article className="relatorios-painel">
+      <div className="relatorios-painel-titulo">
+        <div>
+          <h3>Evolução de pedidos</h3>
+          <p>Quantidade de pedidos registrados por mês.</p>
+        </div>
+      </div>
+
+      {!pedidosMensais.length ? (
+        <p className="relatorios-vazio">Nenhum dado disponível.</p>
+      ) : (
+        <div className="relatorios-tabela-container">
+          <table className="relatorios-tabela">
+            <thead>
+              <tr>
+                <th>Período</th>
+                <th>Quantidade</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pedidosMensais.map((item, indice) => (
+                <tr key={`${item.ano}-${item.mes}-${indice}`}>
+                  <td>{formatarMes(item.mes, item.ano)}</td>
+                  <td>{numero(item.quantidade)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </article>
+  </div>
+</section>
 
       <section className="relatorios-secao">
         <div className="relatorios-secao-titulo">

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react'
 import {
   PieChart,
@@ -9,6 +8,8 @@ import {
   Legend,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid
@@ -21,7 +22,24 @@ const CORES_STATUS = {
   PENDENTE: '#F59E0B',
   APROVADO: '#2F6FED',
   ENTREGUE: '#16A34A',
-  CANCELADO: '#DC2626'
+  CANCELADO: '#DC2626',
+  AGUARDANDO: '#F59E0B',
+  EM_PRODUCAO: '#2F6FED',
+  PRONTO: '#16A34A',
+  PARCIALMENTE_PAGO: '#8B5CF6',
+  PAGO: '#16A34A'
+}
+
+const NOMES_STATUS = {
+  PENDENTE: 'Pendente',
+  APROVADO: 'Aprovado',
+  ENTREGUE: 'Entregue',
+  CANCELADO: 'Cancelado',
+  AGUARDANDO: 'Aguardando',
+  EM_PRODUCAO: 'Em produção',
+  PRONTO: 'Pronto',
+  PARCIALMENTE_PAGO: 'Parcialmente pago',
+  PAGO: 'Pago'
 }
 
 const CORES_GRAFICO = [
@@ -33,28 +51,47 @@ const CORES_GRAFICO = [
   '#64748B'
 ]
 
-const NOMES_STATUS = {
-  PENDENTE: 'Pendente',
-  APROVADO: 'Aprovado',
-  ENTREGUE: 'Entregue',
-  CANCELADO: 'Cancelado'
-}
-
 function Dashboard() {
   const [resumo, setResumo] = useState(null)
   const [pedidosStatus, setPedidosStatus] = useState([])
   const [estoqueBaixo, setEstoqueBaixo] = useState([])
+  const [vendasMensais, setVendasMensais] = useState([])
+  const [recebimentosMensais, setRecebimentosMensais] = useState([])
+  const [pedidosMensais, setPedidosMensais] = useState([])
+  const [producaoStatus, setProducaoStatus] = useState([])
+  const [materiaisSaidas, setMateriaisSaidas] = useState([])
+  const [financeiro, setFinanceiro] = useState([])
   const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
     async function carregarDashboard() {
       setCarregando(true)
 
-      const resultados = await Promise.allSettled([
+      const requisicoes = [
         api.get('/relatorios/resumo'),
         api.get('/relatorios/pedidos-status'),
-        api.get('/relatorios/estoque')
-      ])
+        api.get('/relatorios/estoque'),
+        api.get('/relatorios/vendas-mensais'),
+        api.get('/relatorios/recebimentos-mensais'),
+        api.get('/relatorios/pedidos-mensais'),
+        api.get('/relatorios/producao'),
+        api.get('/relatorios/materiais-saidas'),
+        api.get('/relatorios/financeiro')
+      ]
+
+      const resultados = await Promise.allSettled(requisicoes)
+
+      const obterDados = (indice) => {
+        if (resultados[indice].status === 'fulfilled') {
+          return resultados[indice].value.data || []
+        }
+
+        console.error(
+          `Erro ao carregar relatório ${indice}:`,
+          resultados[indice].reason
+        )
+        return []
+      }
 
       if (resultados[0].status === 'fulfilled') {
         setResumo(resultados[0].value.data)
@@ -62,17 +99,14 @@ function Dashboard() {
         console.error('Erro ao carregar resumo:', resultados[0].reason)
       }
 
-      if (resultados[1].status === 'fulfilled') {
-        setPedidosStatus(resultados[1].value.data || [])
-      } else {
-        console.error('Erro ao carregar pedidos:', resultados[1].reason)
-      }
-
-      if (resultados[2].status === 'fulfilled') {
-        setEstoqueBaixo(resultados[2].value.data || [])
-      } else {
-        console.error('Erro ao carregar estoque:', resultados[2].reason)
-      }
+      setPedidosStatus(obterDados(1))
+      setEstoqueBaixo(obterDados(2))
+      setVendasMensais(obterDados(3))
+      setRecebimentosMensais(obterDados(4))
+      setPedidosMensais(obterDados(5))
+      setProducaoStatus(obterDados(6))
+      setMateriaisSaidas(obterDados(7))
+      setFinanceiro(obterDados(8))
 
       setCarregando(false)
     }
@@ -92,8 +126,60 @@ function Dashboard() {
   }
 
   function nomeStatus(status) {
-    return NOMES_STATUS[status] || status
+    return NOMES_STATUS[status] || String(status || '').replaceAll('_', ' ')
   }
+
+  function nomeMes(mes) {
+    const meses = [
+      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+    ]
+
+    return meses[Number(mes) - 1] || String(mes)
+  }
+
+  function criarChaveMes(item) {
+    return `${item.ano}-${String(item.mes).padStart(2, '0')}`
+  }
+
+  function montarDadosMensais() {
+    const agrupado = {}
+
+    function adicionar(registros, campo) {
+      registros.forEach((item) => {
+        const chave = criarChaveMes(item)
+
+        if (!agrupado[chave]) {
+          agrupado[chave] = {
+            chave,
+            ano: Number(item.ano),
+            mes: Number(item.mes),
+            vendas: 0,
+            recebimentos: 0,
+            pedidos: 0
+          }
+        }
+
+        agrupado[chave][campo] = Number(
+          campo === 'pedidos' ? item.quantidade : item.valor
+        ) || 0
+      })
+    }
+
+    adicionar(vendasMensais, 'vendas')
+    adicionar(recebimentosMensais, 'recebimentos')
+    adicionar(pedidosMensais, 'pedidos')
+
+    return Object.values(agrupado)
+      .sort((a, b) => a.chave.localeCompare(b.chave))
+      .slice(-12)
+      .map((item) => ({
+        ...item,
+        periodo: `${nomeMes(item.mes)}/${String(item.ano).slice(-2)}`
+      }))
+  }
+
+  const dadosMensais = montarDadosMensais()
 
   const dadosPizza = pedidosStatus
     .filter((item) => Number(item.quantidade) > 0)
@@ -109,18 +195,11 @@ function Dashboard() {
     fill: CORES_STATUS[item.status] || '#64748B'
   }))
 
-  const dadosFinanceiros = resumo
-    ? [
-        {
-          nome: 'Vendas',
-          valor: Number(resumo.valorTotalVendas || 0)
-        },
-        {
-          nome: 'Recebido',
-          valor: Number(resumo.valorTotalRecebido || 0)
-        }
-      ]
-    : []
+  const dadosProducao = producaoStatus.map((item) => ({
+    status: nomeStatus(item.status),
+    quantidade: Number(item.quantidade || 0),
+    fill: CORES_STATUS[item.status] || '#64748B'
+  }))
 
   const dadosEstoque = estoqueBaixo
     .map((item) => ({
@@ -130,18 +209,51 @@ function Dashboard() {
     }))
     .slice(0, 8)
 
+  const dadosSaidas = materiaisSaidas
+    .map((item) => ({
+      material: item.material,
+      quantidade: Number(item.quantidadeSaida || 0)
+    }))
+    .sort((a, b) => b.quantidade - a.quantidade)
+    .slice(0, 8)
+
+  const dadosContasReceber = [
+    {
+      status: 'Pendente',
+      quantidade: financeiro.filter(
+        (item) => item.situacao === 'PENDENTE'
+      ).length,
+      fill: '#F59E0B'
+    },
+    {
+      status: 'Parcialmente pago',
+      quantidade: financeiro.filter(
+        (item) => item.situacao === 'PARCIALMENTE_PAGO'
+      ).length,
+      fill: '#8B5CF6'
+    },
+    {
+      status: 'Pago',
+      quantidade: financeiro.filter(
+        (item) => item.situacao === 'PAGO'
+      ).length,
+      fill: '#16A34A'
+    }
+  ]
+
   const totalPedidosStatus = pedidosStatus.reduce(
     (total, item) => total + Number(item.quantidade || 0),
     0
   )
 
-  const percentualRecebido = resumo && Number(resumo.valorTotalVendas) > 0
-    ? Math.min(
-        100,
-        (Number(resumo.valorTotalRecebido || 0) /
-          Number(resumo.valorTotalVendas)) * 100
-      )
-    : 0
+  const percentualRecebido =
+    resumo && Number(resumo.valorTotalVendas) > 0
+      ? Math.min(
+          100,
+          (Number(resumo.valorTotalRecebido || 0) /
+            Number(resumo.valorTotalVendas)) * 100
+        )
+      : 0
 
   if (carregando) {
     return (
@@ -163,8 +275,6 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
-
-      {/* CABEÇALHO */}
       <header className="dashboard-header">
         <div>
           <span className="dashboard-subtitulo">VISÃO GERAL</span>
@@ -178,74 +288,74 @@ function Dashboard() {
         </div>
       </header>
 
-      {/* INDICADORES */}
+      {/* INDICADORES GERAIS */}
       <section className="dashboard-indicadores">
-
-        <div className="indicador-card">
-          <div className="indicador-topo">
-            <span className="indicador-icone azul">♙</span>
-            <span className="indicador-legenda">CADASTRO</span>
+        {[
+          {
+            titulo: 'Clientes',
+            valor: resumo.totalClientes,
+            legenda: 'CADASTRO',
+            icone: '♙',
+            cor: 'azul',
+            descricao: 'Clientes cadastrados'
+          },
+          {
+            titulo: 'Projetos',
+            valor: resumo.totalProjetos,
+            legenda: 'PROJETOS',
+            icone: '▤',
+            cor: 'roxo',
+            descricao: 'Projetos cadastrados'
+          },
+          {
+            titulo: 'Orçamentos',
+            valor: resumo.totalOrcamentos,
+            legenda: 'COMERCIAL',
+            icone: '▧',
+            cor: 'laranja',
+            descricao: 'Orçamentos registrados'
+          },
+          {
+            titulo: 'Pedidos',
+            valor: resumo.totalPedidos,
+            legenda: 'COMERCIAL',
+            icone: '▣',
+            cor: 'verde',
+            descricao: 'Pedidos registrados'
+          },
+          {
+            titulo: 'Em produção',
+            valor: resumo.pedidosEmProducao,
+            legenda: 'PRODUÇÃO',
+            icone: '⚙',
+            cor: 'azul',
+            descricao: 'Pedidos em fabricação'
+          },
+          {
+            titulo: 'Pedidos concluídos',
+            valor: resumo.pedidosConcluidos,
+            legenda: 'CONCLUÍDOS',
+            icone: '✓',
+            cor: 'verde',
+            descricao: 'Pedidos concluídos'
+          }
+        ].map((item) => (
+          <div className="indicador-card" key={item.titulo}>
+            <div className="indicador-topo">
+              <span className={`indicador-icone ${item.cor}`}>
+                {item.icone}
+              </span>
+              <span className="indicador-legenda">{item.legenda}</span>
+            </div>
+            <span className="indicador-titulo">{item.titulo}</span>
+            <strong>{numero(item.valor)}</strong>
+            <small>{item.descricao}</small>
           </div>
-          <span className="indicador-titulo">Clientes</span>
-          <strong>{numero(resumo.totalClientes)}</strong>
-          <small>Clientes cadastrados</small>
-        </div>
-
-        <div className="indicador-card">
-          <div className="indicador-topo">
-            <span className="indicador-icone roxo">▤</span>
-            <span className="indicador-legenda">PROJETOS</span>
-          </div>
-          <span className="indicador-titulo">Projetos</span>
-          <strong>{numero(resumo.totalProjetos)}</strong>
-          <small>Projetos cadastrados</small>
-        </div>
-
-        <div className="indicador-card">
-          <div className="indicador-topo">
-            <span className="indicador-icone laranja">▧</span>
-            <span className="indicador-legenda">COMERCIAL</span>
-          </div>
-          <span className="indicador-titulo">Orçamentos</span>
-          <strong>{numero(resumo.totalOrcamentos)}</strong>
-          <small>Orçamentos registrados</small>
-        </div>
-
-        <div className="indicador-card">
-          <div className="indicador-topo">
-            <span className="indicador-icone verde">▣</span>
-            <span className="indicador-legenda">COMERCIAL</span>
-          </div>
-          <span className="indicador-titulo">Pedidos</span>
-          <strong>{numero(resumo.totalPedidos)}</strong>
-          <small>Pedidos registrados</small>
-        </div>
-
-        <div className="indicador-card">
-          <div className="indicador-topo">
-            <span className="indicador-icone azul">⚙</span>
-            <span className="indicador-legenda">PRODUÇÃO</span>
-          </div>
-          <span className="indicador-titulo">Em produção</span>
-          <strong>{numero(resumo.pedidosEmProducao)}</strong>
-          <small>Pedidos em fabricação</small>
-        </div>
-
-        <div className="indicador-card">
-          <div className="indicador-topo">
-            <span className="indicador-icone verde">✓</span>
-            <span className="indicador-legenda">CONCLUÍDOS</span>
-          </div>
-          <span className="indicador-titulo">Pedidos concluídos</span>
-          <strong>{numero(resumo.pedidosConcluidos)}</strong>
-          <small>Indicador informado pelo relatório</small>
-        </div>
-
+        ))}
       </section>
 
-      {/* FINANCEIRO */}
+      {/* RESUMO FINANCEIRO */}
       <section className="dashboard-financeiro">
-
         <div className="financeiro-card financeiro-vendas">
           <div className="financeiro-icone">R$</div>
           <div>
@@ -260,7 +370,7 @@ function Dashboard() {
           <div>
             <span>Valor recebido</span>
             <strong>{moeda(resumo.valorTotalRecebido)}</strong>
-            <small>Valores efetivamente recebidos</small>
+            <small>Pagamentos efetivamente recebidos</small>
           </div>
         </div>
 
@@ -269,248 +379,392 @@ function Dashboard() {
             <span>Recebimento sobre vendas</span>
             <strong>{percentualRecebido.toFixed(1)}%</strong>
           </div>
-
           <div className="financeiro-barra">
             <div style={{ width: `${percentualRecebido}%` }} />
           </div>
-
-          <small>
-            Percentual recebido em relação ao valor total de vendas.
-          </small>
+          <small>Percentual recebido em relação às vendas.</small>
         </div>
-
       </section>
 
-      {/* GRÁFICOS PRINCIPAIS */}
-      <section className="dashboard-graficos">
-
-        <div className="dashboard-bloco grafico-financeiro">
-          <div className="bloco-cabecalho">
-            <div>
-              <h2>Visão financeira</h2>
-              <p>Comparativo entre vendas e recebimentos</p>
-            </div>
-            <span className="bloco-etiqueta">FINANCEIRO</span>
+      {/* EVOLUÇÃO FINANCEIRA */}
+      <section className="dashboard-secao">
+        <div className="dashboard-secao-titulo">
+          <div>
+            <h2>Desempenho financeiro</h2>
+            <p>Evolução mensal das vendas e dos recebimentos</p>
           </div>
-
-          {dadosFinanceiros.some((item) => item.valor > 0) ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart
-                data={dadosFinanceiros}
-                margin={{ top: 15, right: 15, left: 10, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="nome" axisLine={false} tickLine={false} />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(valor) =>
-                    `R$ ${Number(valor).toLocaleString('pt-BR')}`
-                  }
-                  width={85}
-                />
-                <Tooltip
-                  formatter={(valor) => [moeda(valor), 'Valor']}
-                />
-                <Bar
-                  dataKey="valor"
-                  name="Valor"
-                  fill="#2F6FED"
-                  radius={[7, 7, 0, 0]}
-                  barSize={65}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="grafico-vazio">Ainda não existem valores financeiros para exibir.</p>
-          )}
+          <span className="bloco-etiqueta">FINANCEIRO</span>
         </div>
 
-        <div className="dashboard-bloco grafico-distribuicao">
-          <div className="bloco-cabecalho">
-            <div>
-              <h2>Distribuição dos pedidos</h2>
-              <p>Participação de cada situação</p>
-            </div>
-            <span className="bloco-etiqueta">PEDIDOS</span>
-          </div>
-
-          {dadosPizza.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={240}>
-                <PieChart>
-                  <Pie
-                    data={dadosPizza}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={65}
-                    outerRadius={95}
-                    paddingAngle={3}
-                    stroke="none"
-                  >
-                    {dadosPizza.map((item, index) => (
-                      <Cell
-                        key={item.status}
-                        fill={
-                          CORES_STATUS[item.status] ||
-                          CORES_GRAFICO[index % CORES_GRAFICO.length]
-                        }
-                      />
-                    ))}
-                  </Pie>
-
-                  <Tooltip
-                    formatter={(valor, nome) => [
-                      `${valor} pedido(s)`,
-                      nome
-                    ]}
-                  />
-
-                  <Legend verticalAlign="bottom" />
-                </PieChart>
-              </ResponsiveContainer>
-
-              <div className="pizza-total">
-                <strong>{numero(totalPedidosStatus)}</strong>
-                <span>Pedidos no relatório</span>
+        <div className="dashboard-graficos">
+          <article className="dashboard-bloco">
+            <div className="bloco-cabecalho">
+              <div>
+                <h3>Vendas e recebimentos por mês</h3>
+                <p>Comparativo dos valores registrados</p>
               </div>
-            </>
-          ) : (
-            <p className="grafico-vazio">Nenhum pedido encontrado.</p>
-          )}
-        </div>
+            </div>
 
-      </section>
-
-      {/* PEDIDOS POR STATUS */}
-      <section className="dashboard-bloco dashboard-status">
-        <div className="bloco-cabecalho">
-          <div>
-            <h2>Pedidos por status</h2>
-            <p>Quantidade de pedidos em cada etapa</p>
-          </div>
-          <span className="bloco-etiqueta">ACOMPANHAMENTO</span>
-        </div>
-
-        {dadosPedidos.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={dadosPedidos}
-              margin={{ top: 15, right: 20, left: 0, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis
-                dataKey="status"
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                allowDecimals={false}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                formatter={(valor) => [`${valor} pedido(s)`, 'Quantidade']}
-              />
-              <Bar
-                dataKey="quantidade"
-                name="Pedidos"
-                radius={[7, 7, 0, 0]}
-                barSize={55}
-              >
-                {dadosPedidos.map((item) => (
-                  <Cell key={item.status} fill={item.fill} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <p className="grafico-vazio">Nenhum pedido encontrado.</p>
-        )}
-      </section>
-
-      {/* ESTOQUE */}
-      <section className="dashboard-bloco dashboard-estoque">
-        <div className="bloco-cabecalho">
-          <div>
-            <h2>Atenção ao estoque</h2>
-            <p>Materiais que atingiram ou estão abaixo do estoque mínimo</p>
-          </div>
-
-          <span className="estoque-contador">
-            {estoqueBaixo.length} material(is)
-          </span>
-        </div>
-
-        {dadosEstoque.length > 0 ? (
-          <>
-            <div className="estoque-grafico">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart
-                  data={dadosEstoque}
-                  margin={{ top: 15, right: 15, left: 0, bottom: 50 }}
-                >
+            {dadosMensais.length > 0 ? (
+              <ResponsiveContainer width="100%" height={290}>
+                <LineChart data={dadosMensais}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis
-                    dataKey="material"
-                    angle={-25}
-                    textAnchor="end"
-                    interval={0}
-                    height={75}
-                    tick={{ fontSize: 11 }}
+                  <XAxis dataKey="periodo" />
+                  <YAxis
+                    tickFormatter={(valor) =>
+                      `R$ ${Number(valor).toLocaleString('pt-BR')}`
+                    }
+                    width={85}
                   />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
+                  <Tooltip
+                    formatter={(valor) => moeda(valor)}
+                  />
                   <Legend />
-                  <Bar
-                    dataKey="atual"
-                    name="Quantidade atual"
-                    fill="#2F6FED"
-                    radius={[5, 5, 0, 0]}
+                  <Line
+                    type="monotone"
+                    dataKey="vendas"
+                    name="Vendas"
+                    stroke="#2F6FED"
+                    strokeWidth={3}
+                    dot={{ r: 4 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="recebimentos"
+                    name="Recebimentos"
+                    stroke="#16A34A"
+                    strokeWidth={3}
+                    dot={{ r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="grafico-vazio">Não há dados mensais disponíveis.</p>
+            )}
+          </article>
+
+          <article className="dashboard-bloco">
+            <div className="bloco-cabecalho">
+              <div>
+                <h3>Pedidos por mês</h3>
+                <p>Quantidade de pedidos registrados</p>
+              </div>
+            </div>
+
+            {dadosMensais.some((item) => item.pedidos > 0) ? (
+              <ResponsiveContainer width="100%" height={290}>
+                <BarChart data={dadosMensais}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="periodo" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip
+                    formatter={(valor) => [`${valor} pedido(s)`, 'Quantidade']}
                   />
                   <Bar
-                    dataKey="minimo"
-                    name="Estoque mínimo"
-                    fill="#F59E0B"
-                    radius={[5, 5, 0, 0]}
+                    dataKey="pedidos"
+                    name="Pedidos"
+                    fill="#2F6FED"
+                    radius={[6, 6, 0, 0]}
                   />
                 </BarChart>
               </ResponsiveContainer>
+            ) : (
+              <p className="grafico-vazio">Não há dados mensais disponíveis.</p>
+            )}
+          </article>
+        </div>
+      </section>
+
+      {/* PEDIDOS */}
+      <section className="dashboard-secao">
+        <div className="dashboard-secao-titulo">
+          <div>
+            <h2>Acompanhamento de pedidos</h2>
+            <p>Distribuição e quantidade de pedidos por situação</p>
+          </div>
+          <span className="bloco-etiqueta">COMERCIAL</span>
+        </div>
+
+        <div className="dashboard-graficos">
+          <article className="dashboard-bloco">
+            <div className="bloco-cabecalho">
+              <div>
+                <h3>Distribuição dos pedidos</h3>
+                <p>Participação de cada situação</p>
+              </div>
             </div>
 
-            <div className="estoque-alertas">
-              {dadosEstoque.map((item, index) => (
-                <div className="estoque-alerta-item" key={`${item.material}-${index}`}>
-                  <div>
-                    <strong>{item.material}</strong>
-                    <span>
-                      Atual: {numero(item.atual)} | Mínimo: {numero(item.minimo)}
-                    </span>
-                  </div>
-                  <span className="estoque-alerta-status">
-                    Estoque baixo
-                  </span>
+            {dadosPizza.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={dadosPizza}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={65}
+                      outerRadius={95}
+                      paddingAngle={3}
+                      stroke="none"
+                    >
+                      {dadosPizza.map((item, index) => (
+                        <Cell
+                          key={item.status}
+                          fill={
+                            CORES_STATUS[item.status] ||
+                            CORES_GRAFICO[index % CORES_GRAFICO.length]
+                          }
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(valor) => [`${valor} pedido(s)`, 'Quantidade']}
+                    />
+                    <Legend verticalAlign="bottom" />
+                  </PieChart>
+                </ResponsiveContainer>
+
+                <div className="pizza-total">
+                  <strong>{numero(totalPedidosStatus)}</strong>
+                  <span>Pedidos no relatório</span>
                 </div>
-              ))}
+              </>
+            ) : (
+              <p className="grafico-vazio">Nenhum pedido encontrado.</p>
+            )}
+          </article>
+
+          <article className="dashboard-bloco">
+            <div className="bloco-cabecalho">
+              <div>
+                <h3>Pedidos por situação</h3>
+                <p>Quantidade em cada etapa</p>
+              </div>
             </div>
-          </>
-        ) : (
-          <div className="estoque-sem-alertas">
-            <span className="estoque-sem-alertas-icone">✓</span>
-            <div>
-              <strong>Estoque em situação normal</strong>
-              <p>Nenhum material com estoque baixo foi informado pelo relatório.</p>
-            </div>
+
+            {dadosPedidos.length > 0 ? (
+              <ResponsiveContainer width="100%" height={290}>
+                <BarChart data={dadosPedidos}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="status" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip
+                    formatter={(valor) => [`${valor} pedido(s)`, 'Quantidade']}
+                  />
+                  <Bar dataKey="quantidade" name="Pedidos" radius={[6, 6, 0, 0]}>
+                    {dadosPedidos.map((item) => (
+                      <Cell key={item.status} fill={item.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="grafico-vazio">Nenhum pedido encontrado.</p>
+            )}
+          </article>
+        </div>
+      </section>
+
+      {/* PRODUÇÃO */}
+      <section className="dashboard-secao">
+        <div className="dashboard-secao-titulo">
+          <div>
+            <h2>Acompanhamento da produção</h2>
+            <p>Quantidade de registros em cada etapa produtiva</p>
           </div>
-        )}
+          <span className="bloco-etiqueta">PRODUÇÃO</span>
+        </div>
+
+        <article className="dashboard-bloco">
+          {dadosProducao.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={dadosProducao}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="status" />
+                <YAxis allowDecimals={false} />
+                <Tooltip
+                  formatter={(valor) => [`${valor}`, 'Quantidade']}
+                />
+                <Bar
+                  dataKey="quantidade"
+                  name="Registros"
+                  radius={[6, 6, 0, 0]}
+                >
+                  {dadosProducao.map((item) => (
+                    <Cell key={item.status} fill={item.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="grafico-vazio">Não há dados de produção disponíveis.</p>
+          )}
+        </article>
+      </section>
+
+      {/* ESTOQUE */}
+      <section className="dashboard-secao">
+        <div className="dashboard-secao-titulo">
+          <div>
+            <h2>Controle de estoque</h2>
+            <p>Materiais com mais saídas e materiais abaixo do mínimo</p>
+          </div>
+          <span className="bloco-etiqueta">ESTOQUE</span>
+        </div>
+
+        <div className="dashboard-graficos">
+          <article className="dashboard-bloco">
+            <div className="bloco-cabecalho">
+              <div>
+                <h3>Materiais com mais saídas</h3>
+                <p>Quantidade total registrada em movimentações de saída</p>
+              </div>
+            </div>
+
+            {dadosSaidas.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={dadosSaidas}
+                  layout="vertical"
+                  margin={{ left: 15, right: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} />
+                  <YAxis
+                    type="category"
+                    dataKey="material"
+                    width={110}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <Tooltip />
+                  <Bar
+                    dataKey="quantidade"
+                    name="Quantidade de saídas"
+                    fill="#2F6FED"
+                    radius={[0, 6, 6, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="grafico-vazio">Não há movimentações de saída disponíveis.</p>
+            )}
+          </article>
+
+          <article className="dashboard-bloco">
+            <div className="bloco-cabecalho">
+              <div>
+                <h3>Atenção ao estoque</h3>
+                <p>Quantidade atual comparada ao estoque mínimo</p>
+              </div>
+              <span className="estoque-contador">
+                {estoqueBaixo.length} material(is)
+              </span>
+            </div>
+
+            {dadosEstoque.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart
+                    data={dadosEstoque}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 45 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis
+                      dataKey="material"
+                      angle={-25}
+                      textAnchor="end"
+                      interval={0}
+                      height={65}
+                      tick={{ fontSize: 10 }}
+                    />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar
+                      dataKey="atual"
+                      name="Quantidade atual"
+                      fill="#2F6FED"
+                    />
+                    <Bar
+                      dataKey="minimo"
+                      name="Estoque mínimo"
+                      fill="#F59E0B"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+
+                <div className="estoque-alertas">
+                  {dadosEstoque.map((item, index) => (
+                    <div
+                      className="estoque-alerta-item"
+                      key={`${item.material}-${index}`}
+                    >
+                      <div>
+                        <strong>{item.material}</strong>
+                        <span>
+                          Atual: {numero(item.atual)} | Mínimo: {numero(item.minimo)}
+                        </span>
+                      </div>
+                      <span className="estoque-alerta-status">Estoque baixo</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="estoque-sem-alertas">
+                <span className="estoque-sem-alertas-icone">✓</span>
+                <div>
+                  <strong>Estoque em situação normal</strong>
+                  <p>Nenhum material com estoque baixo foi informado.</p>
+                </div>
+              </div>
+            )}
+          </article>
+        </div>
+      </section>
+
+      {/* CONTAS A RECEBER */}
+      <section className="dashboard-secao">
+        <div className="dashboard-secao-titulo">
+          <div>
+            <h2>Contas a receber</h2>
+            <p>Situação financeira dos pedidos cadastrados</p>
+          </div>
+          <span className="bloco-etiqueta">FINANCEIRO</span>
+        </div>
+
+        <article className="dashboard-bloco">
+          {financeiro.length > 0 ? (
+            <ResponsiveContainer width="100%" height={270}>
+              <BarChart data={dadosContasReceber}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="status" />
+                <YAxis allowDecimals={false} />
+                <Tooltip
+                  formatter={(valor) => [`${valor} pedido(s)`, 'Quantidade']}
+                />
+                <Bar
+                  dataKey="quantidade"
+                  name="Pedidos"
+                  radius={[6, 6, 0, 0]}
+                >
+                  {dadosContasReceber.map((item) => (
+                    <Cell key={item.status} fill={item.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="grafico-vazio">Não há informações financeiras por pedido.</p>
+          )}
+        </article>
       </section>
 
       <footer className="dashboard-footer">
         MarcenariaPro · Painel de gestão
       </footer>
-
     </div>
   )
 }
