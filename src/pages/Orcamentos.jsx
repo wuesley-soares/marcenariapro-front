@@ -468,6 +468,18 @@ async function alterarStatusOrcamento(orcamento, novoStatus) {
     (item) => Number(item.id) === Number(materialFormulario.materialId)
   )
 
+
+
+  if (!material || !materialFormulario.quantidade) {
+    return 0
+  }
+
+  const quantidadeNecessaria = Number(materialFormulario.quantidade)
+  const quantidadeDisponivel = Number(material.quantidade || 0)
+
+  return Math.max(0, quantidadeNecessaria - quantidadeDisponivel)
+}
+
 function calcularFaltaItemOrcamento(item) {
   const material = materiais.find(
     (m) => Number(m.id) === Number(item.materialId)
@@ -489,16 +501,6 @@ function calcularFaltaItemOrcamento(item) {
     0,
     quantidadeTotal - Number(material.quantidade || 0)
   )
-}
-
-  if (!material || !materialFormulario.quantidade) {
-    return 0
-  }
-
-  const quantidadeNecessaria = Number(materialFormulario.quantidade)
-  const quantidadeDisponivel = Number(material.quantidade || 0)
-
-  return Math.max(0, quantidadeNecessaria - quantidadeDisponivel)
 }
 
 function obterMaterialSelecionado() {
