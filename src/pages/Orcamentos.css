@@ -743,3 +743,35 @@
 .botao-aprovar:hover {
   background-color: #bbf7d0;
 }
+
+.material-estoque-info {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.material-estoque-info p {
+  margin: 4px 0;
+}
+
+.aviso-estoque-insuficiente,
+.material-sera-comprado {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.aviso-estoque-suficiente {
+  color: #15803d;
+}
+
+.material-sera-comprado {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 12px;
+  background: #fff7ed;
+  padding: 3px 7px;
+  border-radius: 4px;
+}

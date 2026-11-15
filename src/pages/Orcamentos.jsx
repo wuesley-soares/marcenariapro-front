@@ -87,6 +87,8 @@ async function carregarDetalhes(id, dadosIniciais = null) {
 
     setOrcamentoSelecionado(orcamento)
 
+    await carregarMateriais()
+
     setFormulario({
       valorMaoObra: orcamento.valorMaoObra ?? '',
       margemLucro: orcamento.margemLucro ?? '',
@@ -461,6 +463,50 @@ async function alterarStatusOrcamento(orcamento, novoStatus) {
     return 'status-pendente'
   }
 
+  function calcularFaltaEstoque() {
+  const material = materiais.find(
+    (item) => Number(item.id) === Number(materialFormulario.materialId)
+  )
+
+function calcularFaltaItemOrcamento(item) {
+  const material = materiais.find(
+    (m) => Number(m.id) === Number(item.materialId)
+  )
+
+  if (!material) return 0
+
+  const quantidadeTotal = itensMateriais
+    .filter(
+      (outroItem) =>
+        Number(outroItem.materialId) === Number(item.materialId)
+    )
+    .reduce(
+      (total, outroItem) => total + Number(outroItem.quantidade || 0),
+      0
+    )
+
+  return Math.max(
+    0,
+    quantidadeTotal - Number(material.quantidade || 0)
+  )
+}
+
+  if (!material || !materialFormulario.quantidade) {
+    return 0
+  }
+
+  const quantidadeNecessaria = Number(materialFormulario.quantidade)
+  const quantidadeDisponivel = Number(material.quantidade || 0)
+
+  return Math.max(0, quantidadeNecessaria - quantidadeDisponivel)
+}
+
+function obterMaterialSelecionado() {
+  return materiais.find(
+    (item) => Number(item.id) === Number(materialFormulario.materialId)
+  )
+}
+
   const ambientesDisponiveis = ambientes.filter((ambiente) => {
     const jaPossuiOrcamento = orcamentos.some(
       (orcamento) =>
@@ -741,6 +787,31 @@ async function alterarStatusOrcamento(orcamento, novoStatus) {
                         </option>
                       ))}
                     </select>
+
+                    {obterMaterialSelecionado() && (
+  <div className="material-estoque-info">
+    <p>
+      Estoque atual:{' '}
+      <strong>
+        {obterMaterialSelecionado().quantidade ?? 0}
+      </strong>
+    </p>
+
+    {materialFormulario.quantidade !== '' && (
+      calcularFaltaEstoque() > 0 ? (
+        <p className="aviso-estoque-insuficiente">
+          Será necessário comprar{' '}
+          <strong>{calcularFaltaEstoque()}</strong>{' '}
+          unidade(s) deste material.
+        </p>
+      ) : (
+        <p className="aviso-estoque-suficiente">
+          Há estoque suficiente para esta quantidade.
+        </p>
+      )
+    )}
+  </div>
+)}
                   </div>
 
                   <div>
@@ -828,7 +899,15 @@ async function alterarStatusOrcamento(orcamento, novoStatus) {
                   ) : (
                     itensMateriais.map((item) => (
                       <tr key={item.id}>
-                        <td>{item.materialNome}</td>
+                        <td>
+                          <div>{item.materialNome}</div>
+
+                          {calcularFaltaItemOrcamento(item) > 0 && (
+                            <span className="material-sera-comprado">
+                              Será comprado: {calcularFaltaItemOrcamento(item)}
+                            </span>
+                          )}
+                        </td>
                         <td>{item.quantidade}</td>
                         <td>{item.unidade || '-'}</td>
                         <td>{formatarValor(item.valorUnitario)}</td>
