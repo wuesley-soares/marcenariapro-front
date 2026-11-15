@@ -475,16 +475,10 @@ y = adicionarTabela(
 
   doc.save(nomeArquivo)
 
-      function formatarMes(mes, ano) {
-  const meses = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril',
-    'Maio', 'Junho', 'Julho', 'Agosto',
-    'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ]
 
-  return `${meses[Number(mes) - 1] || mes}/${ano}`
 }
-}
+
+
 
   function aplicarPeriodoPersonalizado() {
     if (!inicio || !fim) {
@@ -622,6 +616,16 @@ y = adicionarTabela(
       </div>
     )
   }
+
+  function formatarMes(mes, ano) {
+  const meses = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril',
+    'Maio', 'Junho', 'Julho', 'Agosto',
+    'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ]
+
+  return `${meses[Number(mes) - 1] || mes}/${ano}`
+}
 
   if (carregando && resumo === null) {
     return (
