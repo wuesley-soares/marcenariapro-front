@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../services/api'
 import './Orcamentos.css'
-import './Orcamentos_UI.css'
+
 
 function Orcamentos() {
   const { ambienteId } = useParams()

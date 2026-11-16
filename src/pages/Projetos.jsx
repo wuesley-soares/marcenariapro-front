@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import './Projetos.css'
-import './Clientes_Projetos_UI.css'
+import './Clientes.css'
 import { useNavigate } from 'react-router-dom'
 
 function Projetos() {
