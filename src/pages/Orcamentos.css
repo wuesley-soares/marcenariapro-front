@@ -887,3 +887,46 @@
     visibility: visible;
   }
 }
+
+
+/* Tabela responsiva */
+.tabela-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.tabela-container table {
+  min-width: 900px;
+}
+
+/* Menu de ações */
+.orcamentos .menu-acoes-linha {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.orcamentos .menu-dropdown-linha {
+  z-index: 3000;
+}
+
+/* Ações em dispositivos móveis */
+@media (max-width: 700px) {
+  .orcamentos .botao-tres-pontos {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .orcamentos-tabela-header {
+    align-items: stretch;
+  }
+
+  .orcamentos-pesquisa {
+    min-width: 0;
+  }
+
+  .acoes {
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+}
+

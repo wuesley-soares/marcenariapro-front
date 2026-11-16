@@ -455,11 +455,10 @@ function Ambientes() {
 
                   <tbody>
                     {ambientesFiltrados.map((ambiente) => (
-                      <tr
-                        key={ambiente.id}
-                        className="ambiente-linha"
-                        onMouseLeave={() => setMenuAberto(null)}
-                      >
+                    <tr
+                          key={ambiente.id}
+                          className="ambiente-linha"
+                        >
                         <td>{ambiente.nome}</td>
 
                         <td>{ambiente.descricao || '-'}</td>

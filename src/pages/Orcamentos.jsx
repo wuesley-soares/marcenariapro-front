@@ -1081,7 +1081,7 @@ function obterMaterialSelecionado() {
 
               <tbody>
                 {orcamentosFiltrados.map((orcamento) => (
-                  <tr key={orcamento.id} className="linha-com-menu" onMouseLeave={() => setMenuAberto(null)}>
+                  <tr key={orcamento.id} className="linha-com-menu">
                     <td>{orcamento.projetoNome || '-'}</td>
                     <td>{orcamento.ambienteNome || '-'}</td>
                     <td>{formatarValor(orcamento.valor)}</td>
@@ -1135,7 +1135,7 @@ function obterMaterialSelecionado() {
             </>
           )}
 
-          <button type="button" className="opcao-excluir" onClick={() => excluirOrcamento(orcamento.id)}>
+          <button type="button" className="opcao-excluir" onClick={() => { setMenuAberto(null); excluirOrcamento(orcamento.id) }}>
             <span>⌫</span> Excluir
           </button>
         </div>

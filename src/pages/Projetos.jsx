@@ -433,7 +433,7 @@ function Projetos() {
 
               <tbody>
                 {projetosFiltrados.map((projeto) => (
-                  <tr key={projeto.id} className="linha-com-menu" onMouseLeave={() => setMenuAberto(null)}>
+                  <tr key={projeto.id} className="linha-com-menu">
                     <td>{projeto.nome}</td>
 
                     <td>
@@ -465,9 +465,16 @@ function Projetos() {
                               <button type="button" onClick={() => { setMenuAberto(null); editarProjeto(projeto) }}>
                                 <span>✎</span> Editar
                               </button>
-                              <button type="button" className="opcao-excluir" onClick={() => excluirProjeto(projeto.id)}>
-                                <span>⌫</span> Excluir
-                              </button>
+                              <button
+                                  type="button"
+                                  className="opcao-excluir"
+                                  onClick={() => {
+                                    setMenuAberto(null)
+                                    excluirProjeto(projeto.id)
+                                  }}
+                                >
+                                  <span>⌫</span> Excluir
+                                </button>
                             </div>
                           )}
                         </div>
