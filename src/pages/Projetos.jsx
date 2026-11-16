@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import './Projetos.css'
+import './Clientes_Projetos_UI.css'
 import { useNavigate } from 'react-router-dom'
 
 function Projetos() {
@@ -13,6 +14,11 @@ function Projetos() {
   const [projetoEditando, setProjetoEditando] = useState(null)
   const [pesquisa, setPesquisa] = useState('')
   const [documento, setDocumento] = useState(null)
+  const [menuAberto, setMenuAberto] = useState(null)
+
+  function alternarMenu(id) {
+    setMenuAberto((atual) => atual === id ? null : id)
+  }
 
   const [formulario, setFormulario] = useState({
     nome: '',
@@ -247,7 +253,7 @@ function Projetos() {
   })
 
   return (
-    <div className="projetos">
+    <div className={`projetos ${mostrarFormulario ? "formulario-aberto" : ""}`}>
       <div className="projetos-header">
         <div>
           <h1>Projetos</h1>
@@ -260,7 +266,7 @@ function Projetos() {
       </div>
 
       {mostrarFormulario && (
-        <div className="projeto-formulario">
+        <div className="projeto-formulario-tela"><div className="projeto-formulario">
           <h2>
             {projetoEditando ? 'Editar projeto' : 'Novo projeto'}
           </h2>
@@ -374,9 +380,10 @@ function Projetos() {
             </div>
           </form>
         </div>
+        </div>
       )}
 
-      <div className="projetos-tabela">
+      {!mostrarFormulario && <div className="projetos-tabela">
         <div className="projetos-tabela-header">
           <div>
             <h2>Projetos cadastrados</h2>
@@ -426,7 +433,7 @@ function Projetos() {
 
               <tbody>
                 {projetosFiltrados.map((projeto) => (
-                  <tr key={projeto.id}>
+                  <tr key={projeto.id} className="linha-com-menu" onMouseLeave={() => setMenuAberto(null)}>
                     <td>{projeto.nome}</td>
 
                     <td>
@@ -443,19 +450,27 @@ function Projetos() {
 
                     <td>
                       <div className="acoes">
-                        <button
-                          className="botao-editar"
-                          onClick={() => editarProjeto(projeto)}
-                        >
-                          Editar
-                        </button>
-
-                        <button
-                          className="botao-excluir"
-                          onClick={() => excluirProjeto(projeto.id)}
-                        >
-                          Excluir
-                        </button>
+                        <div className="menu-acoes-linha">
+                          <button
+                            type="button"
+                            className="botao-tres-pontos"
+                            aria-label={`Mais opções para ${projeto.nome}`}
+                            aria-expanded={menuAberto === projeto.id}
+                            onClick={() => alternarMenu(projeto.id)}
+                          >
+                            ⋮
+                          </button>
+                          {menuAberto === projeto.id && (
+                            <div className="menu-dropdown-linha">
+                              <button type="button" onClick={() => { setMenuAberto(null); editarProjeto(projeto) }}>
+                                <span>✎</span> Editar
+                              </button>
+                              <button type="button" className="opcao-excluir" onClick={() => excluirProjeto(projeto.id)}>
+                                <span>⌫</span> Excluir
+                              </button>
+                            </div>
+                          )}
+                        </div>
 
                         <button
                           className="botao-abrir"
@@ -489,7 +504,7 @@ function Projetos() {
             </table>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   )
 }

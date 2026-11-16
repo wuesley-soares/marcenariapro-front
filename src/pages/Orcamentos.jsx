@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../services/api'
 import './Orcamentos.css'
+import './Orcamentos_UI.css'
 
 function Orcamentos() {
   const { ambienteId } = useParams()
@@ -16,6 +17,11 @@ function Orcamentos() {
   const [orcamentoSelecionado, setOrcamentoSelecionado] = useState(null)
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [mostrarMaterial, setMostrarMaterial] = useState(false)
+  const [menuAberto, setMenuAberto] = useState(null)
+
+  function alternarMenu(id) {
+    setMenuAberto((atual) => atual === id ? null : id)
+  }
 
   const [ambienteSelecionado, setAmbienteSelecionado] = useState(
     ambienteId || ''
@@ -545,7 +551,7 @@ function obterMaterialSelecionado() {
     const totalMateriais = calcularTotalMateriais()
 
     return (
-      <div className="orcamentos">
+      <div className="orcamentos tela-orcamento-aberta">
 
         <div className="orcamento-detalhes-header">
           <div>
@@ -1075,7 +1081,7 @@ function obterMaterialSelecionado() {
 
               <tbody>
                 {orcamentosFiltrados.map((orcamento) => (
-                  <tr key={orcamento.id}>
+                  <tr key={orcamento.id} className="linha-com-menu" onMouseLeave={() => setMenuAberto(null)}>
                     <td>{orcamento.projetoNome || '-'}</td>
                     <td>{orcamento.ambienteNome || '-'}</td>
                     <td>{formatarValor(orcamento.valor)}</td>
@@ -1094,43 +1100,47 @@ function obterMaterialSelecionado() {
 
                     <td>
   <div className="acoes">
-
     <button
       className="botao-abrir"
       onClick={() => abrirOrcamento(orcamento)}
     >
-      Abrir / Editar
+      Abrir
     </button>
 
-    {orcamento.status === 'PENDENTE' && (
-      <>
-        <button
-          className="botao-aprovar"
-          onClick={() =>
-            alterarStatusOrcamento(orcamento, 'APROVADO')
-          }
-        >
-          Aprovar
-        </button>
+    <div className="menu-acoes-linha">
+      <button
+        type="button"
+        className="botao-tres-pontos"
+        aria-label={`Mais opções para orçamento ${orcamento.id}`}
+        aria-expanded={menuAberto === orcamento.id}
+        onClick={() => alternarMenu(orcamento.id)}
+      >
+        ⋮
+      </button>
 
-        <button
-          className="botao-excluir"
-          onClick={() =>
-            alterarStatusOrcamento(orcamento, 'RECUSADO')
-          }
-        >
-          Cancelar
-        </button>
-      </>
-    )}
+      {menuAberto === orcamento.id && (
+        <div className="menu-dropdown-linha">
+          <button type="button" onClick={() => { setMenuAberto(null); abrirOrcamento(orcamento) }}>
+            <span>✎</span> Editar
+          </button>
 
-    <button
-      className="botao-excluir"
-      onClick={() => excluirOrcamento(orcamento.id)}
-    >
-      Excluir
-    </button>
+          {orcamento.status === 'PENDENTE' && (
+            <>
+              <button type="button" onClick={() => { setMenuAberto(null); alterarStatusOrcamento(orcamento, 'APROVADO') }}>
+                <span>✓</span> Aprovar
+              </button>
+              <button type="button" onClick={() => { setMenuAberto(null); alterarStatusOrcamento(orcamento, 'RECUSADO') }}>
+                <span>↩</span> Recusar
+              </button>
+            </>
+          )}
 
+          <button type="button" className="opcao-excluir" onClick={() => excluirOrcamento(orcamento.id)}>
+            <span>⌫</span> Excluir
+          </button>
+        </div>
+      )}
+    </div>
   </div>
 </td>
                   </tr>

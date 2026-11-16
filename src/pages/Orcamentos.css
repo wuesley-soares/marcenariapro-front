@@ -775,3 +775,115 @@
   padding: 3px 7px;
   border-radius: 4px;
 }
+
+/* ===== Tela inteira para criação/edição de orçamento ===== */
+.orcamentos.tela-orcamento-aberta {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  padding: 30px;
+  box-sizing: border-box;
+  background: #f5f6f8;
+}
+
+.orcamentos.tela-orcamento-aberta > .orcamento-detalhes-header,
+.orcamentos.tela-orcamento-aberta > .orcamento-formulario,
+.orcamentos.tela-orcamento-aberta > .materiais-orcamento {
+  width: 100%;
+  max-width: 1150px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.orcamentos.tela-orcamento-aberta .orcamento-formulario {
+  box-sizing: border-box;
+}
+
+/* Menu de ações de orçamento */
+.orcamentos .linha-com-menu:hover {
+  background: #f8faff;
+}
+
+.orcamentos .menu-acoes-linha {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.orcamentos .botao-tres-pontos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #4b5563;
+  font-size: 26px;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.orcamentos .linha-com-menu:hover .botao-tres-pontos,
+.orcamentos .linha-com-menu:focus-within .botao-tres-pontos,
+.orcamentos .botao-tres-pontos[aria-expanded="true"] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.orcamentos .botao-tres-pontos:hover {
+  background: #e9eef7;
+}
+
+.orcamentos .menu-dropdown-linha {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 300;
+  width: 155px;
+  padding: 6px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.13);
+}
+
+.orcamentos .menu-dropdown-linha button {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #333;
+  text-align: left;
+  cursor: pointer;
+}
+
+.orcamentos .menu-dropdown-linha button:hover {
+  background: #f3f4f6;
+}
+
+.orcamentos .menu-dropdown-linha .opcao-excluir {
+  color: #dc2626;
+}
+
+@media (max-width: 700px) {
+  .orcamentos.tela-orcamento-aberta {
+    padding: 15px 10px;
+  }
+
+  .orcamentos .botao-tres-pontos {
+    opacity: 1;
+    visibility: visible;
+  }
+}

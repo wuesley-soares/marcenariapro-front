@@ -14,6 +14,7 @@ function Ambientes() {
   const [ambienteEditando, setAmbienteEditando] = useState(null)
   const [pesquisa, setPesquisa] = useState('')
   const [documento, setDocumento] = useState(null)
+  const [menuAberto, setMenuAberto] = useState(null)
 
   const [formulario, setFormulario] = useState({
     nome: '',
@@ -53,10 +54,10 @@ function Ambientes() {
   function alterarCampo(event) {
     const { name, value } = event.target
 
-    setFormulario({
-      ...formulario,
+    setFormulario((anterior) => ({
+      ...anterior,
       [name]: value
-    })
+    }))
   }
 
   function selecionarDocumento(event) {
@@ -88,6 +89,7 @@ function Ambientes() {
   }
 
   function novoAmbiente() {
+    setMenuAberto(null)
     setAmbienteEditando(null)
     setDocumento(null)
 
@@ -100,6 +102,7 @@ function Ambientes() {
   }
 
   function editarAmbiente(ambiente) {
+    setMenuAberto(null)
     setAmbienteEditando(ambiente)
     setDocumento(null)
 
@@ -160,7 +163,6 @@ function Ambientes() {
 
       cancelarFormulario()
       await carregarAmbientes()
-
     } catch (error) {
       console.error('Erro ao salvar ambiente:', error)
 
@@ -189,16 +191,13 @@ function Ambientes() {
       )
 
       const arquivoUrl = URL.createObjectURL(resposta.data)
-
       novaAba.location.href = arquivoUrl
 
       setTimeout(() => {
         URL.revokeObjectURL(arquivoUrl)
       }, 60000)
-
     } catch (error) {
       console.error('Erro ao visualizar documento:', error)
-
       novaAba.close()
 
       alert(
@@ -209,6 +208,8 @@ function Ambientes() {
   }
 
   async function excluirAmbiente(id) {
+    setMenuAberto(null)
+
     const confirmar = window.confirm(
       'Tem certeza que deseja excluir este ambiente?'
     )
@@ -219,9 +220,7 @@ function Ambientes() {
       await api.delete(`/ambientes/${id}`)
 
       alert('Ambiente excluído com sucesso!')
-
       await carregarAmbientes()
-
     } catch (error) {
       console.error('Erro ao excluir ambiente:', error)
 
@@ -231,6 +230,10 @@ function Ambientes() {
 
       alert(mensagem)
     }
+  }
+
+  function alternarMenu(id) {
+    setMenuAberto((atual) => atual === id ? null : id)
   }
 
   const ambientesFiltrados = ambientes.filter((ambiente) => {
@@ -245,243 +248,294 @@ function Ambientes() {
   return (
     <div className="ambientes">
 
-      <div className="ambientes-header">
-        <div>
-          <h1>Ambientes</h1>
-          <p>
-            Ambientes cadastrados no projeto{' '}
-            {nomeProjeto || '...'}
-          </p>
-        </div>
+      {mostrarFormulario ? (
+        <div className="ambiente-formulario-tela">
+          <div className="ambiente-formulario-conteudo">
 
-        <div className="ambientes-header-botoes">
-          <button
-            className="botao-voltar"
-            onClick={() => navigate('/projetos')}
-          >
-            Voltar
-          </button>
+            <div className="ambiente-formulario-topo">
+              <div>
+                <span className="ambiente-formulario-identificacao">
+                  PROJETO: {nomeProjeto || '...'}
+                </span>
 
-          <button
-            className="botao-novo"
-            onClick={novoAmbiente}
-          >
-            Novo ambiente
-          </button>
-        </div>
-      </div>
+                <h1>
+                  {ambienteEditando
+                    ? 'Editar ambiente'
+                    : 'Novo ambiente'}
+                </h1>
 
-      {mostrarFormulario && (
-        <div className="ambiente-formulario">
-
-          <h2>
-            {ambienteEditando
-              ? 'Editar ambiente'
-              : 'Novo ambiente'}
-          </h2>
-
-          <form onSubmit={salvarAmbiente}>
-
-            <div>
-              <label htmlFor="nomeAmbiente">
-                Nome do ambiente
-              </label>
-
-              <input
-                id="nomeAmbiente"
-                type="text"
-                name="nome"
-                value={formulario.nome}
-                onChange={alterarCampo}
-                placeholder="Ex.: Cozinha"
-                required
-              />
-            </div>
-
-            <div className="campo-descricao">
-              <label htmlFor="descricaoAmbiente">
-                Descrição
-              </label>
-
-              <textarea
-                id="descricaoAmbiente"
-                name="descricao"
-                value={formulario.descricao}
-                onChange={alterarCampo}
-                placeholder="Descrição do ambiente"
-                rows="4"
-              />
-            </div>
-
-            <div className="campo-documento">
-              <label htmlFor="documentoAmbiente">
-                Documento do ambiente (PDF)
-              </label>
-
-              <input
-                id="documentoAmbiente"
-                type="file"
-                accept="application/pdf,.pdf"
-                onChange={selecionarDocumento}
-              />
-
-              <small>
-                Arquivo PDF de até 5 MB.
-              </small>
-
-              {documento && (
-                <p className="documento-selecionado">
-                  Novo arquivo: {documento.name}
+                <p>
+                  {ambienteEditando
+                    ? 'Altere as informações do ambiente.'
+                    : 'Preencha as informações para cadastrar um ambiente.'}
                 </p>
-              )}
-
-              {ambienteEditando?.nomeDocumento && (
-                <div className="documento-atual">
-                  <span>
-                    Documento atual: {ambienteEditando.nomeDocumento}
-                  </span>
-
-                  <button
-                    type="button"
-                    className="botao-visualizar-documento"
-                    onClick={() =>
-                      visualizarDocumento(ambienteEditando.id)
-                    }
-                  >
-                    Visualizar PDF
-                  </button>
-
-                  <small>
-                    Se não selecionar outro arquivo, o documento atual será mantido.
-                  </small>
-                </div>
-              )}
-            </div>
-
-            <div className="formulario-botoes">
+              </div>
 
               <button
                 type="button"
+                className="ambiente-fechar-formulario"
                 onClick={cancelarFormulario}
+                aria-label="Fechar formulário"
               >
-                Cancelar
+                ×
               </button>
-
-              <button type="submit">
-                {ambienteEditando
-                  ? 'Salvar alterações'
-                  : 'Cadastrar'}
-              </button>
-
             </div>
 
-          </form>
+            <form
+              className="ambiente-formulario ambiente-formulario-full"
+              onSubmit={salvarAmbiente}
+            >
+              <div>
+                <label htmlFor="nomeAmbiente">
+                  Nome do ambiente
+                </label>
+
+                <input
+                  id="nomeAmbiente"
+                  type="text"
+                  name="nome"
+                  value={formulario.nome}
+                  onChange={alterarCampo}
+                  placeholder="Ex.: Cozinha"
+                  required
+                />
+              </div>
+
+              <div className="campo-descricao">
+                <label htmlFor="descricaoAmbiente">
+                  Descrição
+                </label>
+
+                <textarea
+                  id="descricaoAmbiente"
+                  name="descricao"
+                  value={formulario.descricao}
+                  onChange={alterarCampo}
+                  placeholder="Descrição do ambiente"
+                  rows="5"
+                />
+              </div>
+
+              <div className="campo-documento">
+                <label htmlFor="documentoAmbiente">
+                  Documento do ambiente (PDF)
+                </label>
+
+                <input
+                  id="documentoAmbiente"
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={selecionarDocumento}
+                />
+
+                <small>Arquivo PDF de até 5 MB.</small>
+
+                {documento && (
+                  <p className="documento-selecionado">
+                    Novo arquivo: {documento.name}
+                  </p>
+                )}
+
+                {ambienteEditando?.nomeDocumento && (
+                  <div className="documento-atual">
+                    <span>
+                      Documento atual: {ambienteEditando.nomeDocumento}
+                    </span>
+
+                    <button
+                      type="button"
+                      className="botao-visualizar-documento"
+                      onClick={() =>
+                        visualizarDocumento(ambienteEditando.id)
+                      }
+                    >
+                      Visualizar PDF
+                    </button>
+
+                    <small>
+                      Se não selecionar outro arquivo, o documento atual será mantido.
+                    </small>
+                  </div>
+                )}
+              </div>
+
+              <div className="formulario-botoes">
+                <button
+                  type="button"
+                  onClick={cancelarFormulario}
+                >
+                  Cancelar
+                </button>
+
+                <button type="submit">
+                  {ambienteEditando
+                    ? 'Salvar alterações'
+                    : 'Cadastrar ambiente'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      )}
+      ) : (
+        <>
+          <div className="ambientes-header">
+            <div>
+              <h1>Ambientes</h1>
+              <p>
+                Ambientes cadastrados no projeto{' '}
+                {nomeProjeto || '...'}
+              </p>
+            </div>
 
-      <div className="ambientes-tabela">
-        <div className="ambientes-tabela-header">
-          <div>
-            <h2>Ambientes cadastrados</h2>
-            <span>
-              {ambientesFiltrados.length}{' '}
-              {ambientesFiltrados.length === 1
-                ? 'ambiente encontrado'
-                : 'ambientes encontrados'}
-            </span>
+            <div className="ambientes-header-botoes">
+              <button
+                className="botao-voltar"
+                onClick={() => navigate('/projetos')}
+              >
+                Voltar
+              </button>
+
+              <button
+                className="botao-novo"
+                onClick={novoAmbiente}
+              >
+                + Novo ambiente
+              </button>
+            </div>
           </div>
 
-          <div className="ambientes-pesquisa">
-            <input
-              type="text"
-              placeholder="Pesquisar por nome ou descrição..."
-              value={pesquisa}
-              onChange={(event) => setPesquisa(event.target.value)}
-            />
-          </div>
-        </div>
+          <div className="ambientes-tabela">
+            <div className="ambientes-tabela-header">
+              <div>
+                <h2>Ambientes cadastrados</h2>
+                <span>
+                  {ambientesFiltrados.length}{' '}
+                  {ambientesFiltrados.length === 1
+                    ? 'ambiente encontrado'
+                    : 'ambientes encontrados'}
+                </span>
+              </div>
 
-        {ambientesFiltrados.length === 0 ? (
-          <div className="ambientes-vazio">
-            <h3>
-              {ambientes.length === 0
-                ? 'Nenhum ambiente cadastrado'
-                : 'Nenhum ambiente encontrado'}
-            </h3>
+              <div className="ambientes-pesquisa">
+                <input
+                  type="text"
+                  placeholder="Pesquisar por nome ou descrição..."
+                  value={pesquisa}
+                  onChange={(event) => setPesquisa(event.target.value)}
+                />
+              </div>
+            </div>
 
-            <p>
-              {ambientes.length === 0
-                ? 'Cadastre um novo ambiente para começar.'
-                : 'Tente pesquisar por outro nome ou descrição.'}
-            </p>
-          </div>
-        ) : (
-          <div className="tabela-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Descrição</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
+            {ambientesFiltrados.length === 0 ? (
+              <div className="ambientes-vazio">
+                <h3>
+                  {ambientes.length === 0
+                    ? 'Nenhum ambiente cadastrado'
+                    : 'Nenhum ambiente encontrado'}
+                </h3>
 
-              <tbody>
-                {ambientesFiltrados.map((ambiente) => (
-                  <tr key={ambiente.id}>
-                    <td>{ambiente.nome}</td>
+                <p>
+                  {ambientes.length === 0
+                    ? 'Cadastre um novo ambiente para começar.'
+                    : 'Tente pesquisar por outro nome ou descrição.'}
+                </p>
+              </div>
+            ) : (
+              <div className="tabela-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>Descrição</th>
+                      <th>Orçamento</th>
+                      <th>Documento</th>
+                      <th className="coluna-acoes-ambiente"> </th>
+                    </tr>
+                  </thead>
 
-                    <td>{ambiente.descricao || '-'}</td>
+                  <tbody>
+                    {ambientesFiltrados.map((ambiente) => (
+                      <tr
+                        key={ambiente.id}
+                        className="ambiente-linha"
+                        onMouseLeave={() => setMenuAberto(null)}
+                      >
+                        <td>{ambiente.nome}</td>
 
-                    <td>
-                      <div className="acoes">
-                        <button
-                          className="botao-editar"
-                          onClick={() => editarAmbiente(ambiente)}
-                        >
-                          Editar
-                        </button>
+                        <td>{ambiente.descricao || '-'}</td>
 
-                        <button
-                          className="botao-excluir"
-                          onClick={() => excluirAmbiente(ambiente.id)}
-                        >
-                          Excluir
-                        </button>
+                        <td>
+                          <button
+                            className="botao-abrir"
+                            onClick={() =>
+                              navigate(`/ambientes/${ambiente.id}/orcamentos`)
+                            }
+                          >
+                            Acessar orçamento
+                          </button>
+                        </td>
 
-                        <button
-                          className="botao-abrir"
-                          onClick={() =>
-                            navigate(`/ambientes/${ambiente.id}/orcamentos`)
-                          }
-                        >
-                          Orçamento
-                        </button>
-                        {ambiente.nomeDocumento ? (
-                              <button
-                                className="botao-anexo"
-                                onClick={() => visualizarDocumento(ambiente.id)}
-                                type="button"
-                              >
-                                Ver anexo
-                              </button>
-                            ) : (
-                              <span className="sem-anexo">
-                                Sem anexo
-                              </span>
+                        <td>
+                          {ambiente.nomeDocumento ? (
+                            <button
+                              className="botao-anexo"
+                              onClick={() =>
+                                visualizarDocumento(ambiente.id)
+                              }
+                              type="button"
+                            >
+                              Ver anexo
+                            </button>
+                          ) : (
+                            <span className="sem-anexo">
+                              Sem anexo
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="coluna-acoes-ambiente">
+                          <div className="menu-acoes-ambiente">
+                            <button
+                              type="button"
+                              className="botao-tres-pontos"
+                              aria-label={`Mais opções para ${ambiente.nome}`}
+                              aria-expanded={menuAberto === ambiente.id}
+                              onClick={() => alternarMenu(ambiente.id)}
+                            >
+                              ⋮
+                            </button>
+
+                            {menuAberto === ambiente.id && (
+                              <div className="menu-dropdown-ambiente">
+                                <button
+                                  type="button"
+                                  onClick={() => editarAmbiente(ambiente)}
+                                >
+                                  <span>✎</span>
+                                  Editar
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="opcao-excluir-ambiente"
+                                  onClick={() => excluirAmbiente(ambiente.id)}
+                                >
+                                  <span>⌫</span>
+                                  Excluir
+                                </button>
+                              </div>
                             )}
-
-                        
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-
+        </>
+      )}
     </div>
   )
 }

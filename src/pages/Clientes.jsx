@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import './Clientes.css'
+import './Clientes_Projetos_UI.css'
 
 function Clientes() {
   const [clientes, setClientes] = useState([])
@@ -422,7 +423,7 @@ function formatarMoeda(valor) {
 })
 
   return (
-    <div className="clientes">
+    <div className={`clientes ${mostrarFormulario ? "formulario-aberto" : ""}`}>
       <div className="clientes-resumo">
   <div className="cliente-resumo-card">
     <span>Total em pedidos</span>
@@ -456,7 +457,7 @@ function formatarMoeda(valor) {
       </div>
 
       {mostrarFormulario && (
-        <div className="cliente-formulario">
+        <div className="cliente-formulario-tela"><div className="cliente-formulario">
           <h2>
             {clienteEditando ? 'Editar cliente' : 'Novo cliente'}
           </h2>
@@ -600,9 +601,10 @@ function formatarMoeda(valor) {
             </div>
           </form>
         </div>
+        </div>
       )}
 
-<div className="clientes-tabela">
+{!mostrarFormulario && <div className="clientes-tabela">
 
   <div className="clientes-tabela-header">
     <div>
@@ -667,7 +669,7 @@ function formatarMoeda(valor) {
 
         <tbody>
           {clientesFiltrados.map((cliente) => (
-            <tr key={cliente.id}>
+            <tr key={cliente.id} className="linha-com-menu" onMouseLeave={() => setMenuAberto(null)}>
               <td>{cliente.nome}</td>
               <td>{formatarCpfCnpj(cliente.cpfCnpj)}</td>
               <td>{cliente.telefone}</td>
@@ -689,19 +691,27 @@ function formatarMoeda(valor) {
 </td>
               <td>
                 <div className="acoes">
-                  <button
-                    className="botao-editar"
-                    onClick={() => editarCliente(cliente)}
-                  >
-                    Editar
-                  </button>
-
-                  <button
-                    className="botao-excluir"
-                    onClick={() => excluirCliente(cliente.id)}
-                  >
-                    Excluir
-                  </button>
+                  <div className="menu-acoes-linha">
+                    <button
+                      type="button"
+                      className="botao-tres-pontos"
+                      aria-label={`Mais opções para ${cliente.nome}`}
+                      aria-expanded={menuAberto === cliente.id}
+                      onClick={() => alternarMenu(cliente.id)}
+                    >
+                      ⋮
+                    </button>
+                    {menuAberto === cliente.id && (
+                      <div className="menu-dropdown-linha">
+                        <button type="button" onClick={() => { setMenuAberto(null); editarCliente(cliente) }}>
+                          <span>✎</span> Editar
+                        </button>
+                        <button type="button" className="opcao-excluir" onClick={() => excluirCliente(cliente.id)}>
+                          <span>⌫</span> Excluir
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
                 <button
                   className="botao-whatsapp"
@@ -724,7 +734,7 @@ function formatarMoeda(valor) {
     </div>
   )}
 
-</div>
+</div>}
 
     </div>
   )
