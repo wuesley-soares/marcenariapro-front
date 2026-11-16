@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import './Clientes.css'
-import './Clientes_Projetos_UI.css'
+import './Projetos.css'
 
 function Clientes() {
   const [clientes, setClientes] = useState([])
