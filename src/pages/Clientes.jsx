@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from 'react'
+import { Trash2 } from "lucide-react";
 import api from '../services/api'
 import './Clientes.css'
 import './Projetos.css'
@@ -708,7 +709,7 @@ function Clientes() {
                                     className="opcao-excluir"
                                     onClick={() => excluirCliente(cliente.id)}
                                   >
-                                    <span>⌫</span> Excluir
+                                    <span>🗑️</span> Excluir
                                   </button>
                                 </div>
                               )}

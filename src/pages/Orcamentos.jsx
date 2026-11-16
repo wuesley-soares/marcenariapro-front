@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Trash2 } from "lucide-react";
 import api from '../services/api'
 import './Orcamentos.css'
 
@@ -1136,7 +1137,7 @@ function obterMaterialSelecionado() {
           )}
 
           <button type="button" className="opcao-excluir" onClick={() => { setMenuAberto(null); excluirOrcamento(orcamento.id) }}>
-            <span>⌫</span> Excluir
+            <span>🗑️</span> Excluir
           </button>
         </div>
       )}

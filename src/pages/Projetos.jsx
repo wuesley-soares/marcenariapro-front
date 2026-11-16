@@ -4,6 +4,7 @@ import api from '../services/api'
 import './Projetos.css'
 import './Clientes.css'
 import { useNavigate } from 'react-router-dom'
+import { Trash2 } from "lucide-react";
 
 function Projetos() {
   const navigate = useNavigate()
@@ -473,7 +474,7 @@ function Projetos() {
                                     excluirProjeto(projeto.id)
                                   }}
                                 >
-                                  <span>⌫</span> Excluir
+                                 <span>🗑️</span> Excluir
                                 </button>
                             </div>
                           )}

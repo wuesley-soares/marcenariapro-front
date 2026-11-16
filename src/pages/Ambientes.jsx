@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Trash2 } from "lucide-react";
 import api from '../services/api'
 import './Ambientes.css'
 
@@ -519,7 +520,7 @@ function Ambientes() {
                                   className="opcao-excluir-ambiente"
                                   onClick={() => excluirAmbiente(ambiente.id)}
                                 >
-                                  <span>⌫</span>
+                                  <span>🗑️</span>
                                   Excluir
                                 </button>
                               </div>
