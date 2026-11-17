@@ -1082,7 +1082,12 @@ function obterMaterialSelecionado() {
 
               <tbody>
                 {orcamentosFiltrados.map((orcamento) => (
-                  <tr key={orcamento.id} className="linha-com-menu">
+                                  <tr
+                    key={orcamento.id}
+                    className="linha-com-menu"
+                    onDoubleClick={() => abrirOrcamento(orcamento)}
+                    title="Dê um duplo clique para abrir o orçamento"
+                  >
                     <td>{orcamento.projetoNome || '-'}</td>
                     <td>{orcamento.ambienteNome || '-'}</td>
                     <td>{formatarValor(orcamento.valor)}</td>
@@ -1101,12 +1106,7 @@ function obterMaterialSelecionado() {
 
                     <td>
   <div className="acoes">
-    <button
-      className="botao-abrir"
-      onClick={() => abrirOrcamento(orcamento)}
-    >
-      Abrir
-    </button>
+
 
     <div className="menu-acoes-linha">
       <button

@@ -930,3 +930,17 @@
   }
 }
 
+.orcamentos .linha-com-menu {
+  cursor: pointer;
+}
+
+.orcamentos .linha-com-menu:hover {
+  background-color: #f0f5ff;
+}
+
+/* Mantém os botões do menu com seu próprio comportamento */
+.orcamentos .menu-acoes-linha,
+.orcamentos .menu-acoes-linha button {
+  cursor: pointer;
+}
+
