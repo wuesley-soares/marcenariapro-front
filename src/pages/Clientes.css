@@ -573,3 +573,34 @@
     padding: 25px 15px;
   }
 }
+
+/* ================================
+   SITUAÇÃO FINANCEIRA DOS CLIENTES
+================================ */
+
+.badge-situacao-financeira {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Cliente quitado */
+.situacao-quitado {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+/* Cliente com saldo a receber */
+.situacao-pendente {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+/* Cliente sem pedidos */
+.situacao-sem-pedidos {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}

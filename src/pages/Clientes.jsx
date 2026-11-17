@@ -677,9 +677,23 @@ function Clientes() {
                         <td>{cliente.email}</td>
 
                         <td>
-                          {carregandoFinanceiro
-                            ? 'Carregando...'
-                            : obterDescricaoSituacao(situacao)}
+                            {carregandoFinanceiro ? (
+                              'Carregando...'
+                            ) : (
+                              <span
+                                className={`badge-situacao-financeira ${
+                                  situacao === 'QUITADO'
+                                    ? 'situacao-quitado'
+                                    : situacao === 'COM_SALDO_A_RECEBER'
+                                    ? 'situacao-pendente'
+                                    : situacao === 'SEM_PEDIDOS'
+                                    ? 'situacao-sem-pedidos'
+                                    : ''
+                                }`}
+                              >
+                                {obterDescricaoSituacao(situacao)}
+                              </span>
+                            )}
                         </td>
 
                         <td>
