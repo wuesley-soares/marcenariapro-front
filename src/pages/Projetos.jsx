@@ -450,7 +450,33 @@ function Projetos() {
                     <td>{projeto.descricao || '-'}</td>
 
                     <td>
+                      
                       <div className="acoes">
+                        {/* Primeiro: Ambientes */}
+                        <button
+                          type="button"
+                          className="botao-abrir"
+                          onClick={() =>
+                            navigate(`/projetos/${projeto.id}/ambientes`)
+                          }
+                        >
+                          Ambientes
+                        </button>
+
+                        {/* Segundo: Anexo */}
+                        {projeto.nomeDocumento ? (
+                          <button
+                            type="button"
+                            className="botao-anexo"
+                            onClick={() => visualizarDocumento(projeto.id)}
+                          >
+                            Ver anexo
+                          </button>
+                        ) : (
+                          <span className="sem-anexo">Sem anexo</span>
+                        )}
+
+                        {/* Último: três pontos */}
                         <div className="menu-acoes-linha">
                           <button
                             type="button"
@@ -461,50 +487,34 @@ function Projetos() {
                           >
                             ⋮
                           </button>
+
                           {menuAberto === projeto.id && (
                             <div className="menu-dropdown-linha">
-                              <button type="button" onClick={() => { setMenuAberto(null); editarProjeto(projeto) }}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setMenuAberto(null)
+                                  editarProjeto(projeto)
+                                }}
+                              >
                                 <span>✎</span> Editar
                               </button>
+
                               <button
-                                  type="button"
-                                  className="opcao-excluir"
-                                  onClick={() => {
-                                    setMenuAberto(null)
-                                    excluirProjeto(projeto.id)
-                                  }}
-                                >
-                                 <span>🗑️</span> Excluir
-                                </button>
+                                type="button"
+                                className="opcao-excluir"
+                                onClick={() => {
+                                  setMenuAberto(null)
+                                  excluirProjeto(projeto.id)
+                                }}
+                              >
+                                <span>🗑️</span> Excluir
+                              </button>
                             </div>
                           )}
                         </div>
-
-                        <button
-                          className="botao-abrir"
-                          onClick={() =>
-                            navigate(`/projetos/${projeto.id}/ambientes`)
-                          }
-                        >
-                          Ambientes
-                        </button>
-
-                        {projeto.nomeDocumento ? (
-                          <button
-                            className="botao-anexo"
-                            onClick={() => visualizarDocumento(projeto.id)}
-                            type="button"
-                          >
-                            Ver anexo
-                          </button>
-                        ) : (
-                          <span className="sem-anexo">
-                            Sem anexo
-                          </span>
-                        )}
-
-
                       </div>
+
                     </td>
                   </tr>
                 ))}
