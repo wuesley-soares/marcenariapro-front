@@ -582,7 +582,7 @@ function Producao() {
                       key={material.id}
                       value={material.id}
                     >
-                      {material.nome} — Estoque: {material.quantidade}
+                      {material.nome} — Estoque: {material.quantidade} {material.unidadeMedida}
                     </option>
                   ))}
                 </select>
@@ -591,18 +591,20 @@ function Producao() {
               <div>
                 <label>Quantidade</label>
 
-                <input
-                  type="number"
-                  min="1"
-                  value={formMaterial.quantidade}
-                  onChange={(e) =>
-                    setFormMaterial({
-                      ...formMaterial,
-                      quantidade: e.target.value
-                    })
-                  }
-                  required
-                />
+                  <input
+                    type="number"
+                    min="0.001"
+                    step="0.001"
+                    placeholder="Ex.: 2.500"
+                    value={formMaterial.quantidade}
+                    onChange={(e) =>
+                      setFormMaterial({
+                        ...formMaterial,
+                        quantidade: e.target.value
+                      })
+                    }
+                    required
+                  />
               </div>
 
               {(producaoSelecionada?.status === 'AGUARDANDO' ||

@@ -194,11 +194,7 @@ const [carregandoImagens, setCarregandoImagens] = useState(false)
         dataEntregaOriginal:
           formulario.dataEntregaOriginal,
 
-        valorServico:
-          Number(formulario.valorServico || 0),
-
-        valorMateriais:
-          Number(formulario.valorMateriais || 0),
+        valorServico: formulario.valorServico || "0.00",
 
         status:
           formulario.status,
@@ -603,6 +599,13 @@ function classeStatus(status) {
   return classes[status] || ''
 }
 
+function formatarMoeda(valor) {
+  return Number(valor || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  })
+}
+
   return (
     <div className="assistencias">
 
@@ -877,19 +880,13 @@ function classeStatus(status) {
 
                   </td>
 
-                  <td>
-                    R${' '}
-                    {Number(
-                      assistencia.valorMateriais || 0
-                    ).toFixed(2)}
-                  </td>
+                    <td>
+                      {formatarMoeda(assistencia.valorMateriais)}
+                    </td>
 
-                  <td>
-                    R${' '}
-                    {Number(
-                      assistencia.valorTotal || 0
-                    ).toFixed(2)}
-                  </td>
+                    <td>
+                      {formatarMoeda(assistencia.valorTotal)}
+                    </td>
 
                   <td>
 

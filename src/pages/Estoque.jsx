@@ -18,7 +18,8 @@ function Estoque() {
     descricao: '',
     quantidade: '',
     estoqueMinimo: '',
-    valorUnitario: ''
+    valorUnitario: '',
+    unidadeMedida: 'UN'
   })
 
   const [formularioMovimentacao, setFormularioMovimentacao] = useState({
@@ -76,19 +77,20 @@ function Estoque() {
     })
   }
 
-  function novoMaterial() {
-    setMaterialEditando(null)
+function novoMaterial() {
+  setMaterialEditando(null)
 
-    setFormulario({
-      nome: '',
-      descricao: '',
-      quantidade: '',
-      estoqueMinimo: '',
-      valorUnitario: ''
-    })
+  setFormulario({
+    nome: '',
+    descricao: '',
+    quantidade: '',
+    estoqueMinimo: '',
+    valorUnitario: '',
+    unidadeMedida: 'UN'
+  })
 
-    setMostrarFormulario(true)
-  }
+  setMostrarFormulario(true)
+}
 
   function editarMaterial(material) {
     setMaterialEditando(material)
@@ -98,7 +100,8 @@ function Estoque() {
       descricao: material.descricao || '',
       quantidade: material.quantidade ?? '',
       estoqueMinimo: material.estoqueMinimo ?? '',
-      valorUnitario: material.valorUnitario ?? ''
+      valorUnitario: material.valorUnitario ?? '',
+      unidadeMedida: material.unidadeMedida || 'UN'
     })
 
     setMostrarFormulario(true)
@@ -113,7 +116,8 @@ function Estoque() {
       descricao: '',
       quantidade: '',
       estoqueMinimo: '',
-      valorUnitario: ''
+      valorUnitario: '',
+      unidadeMedida: 'UN'
     })
   }
 
@@ -121,12 +125,13 @@ function Estoque() {
     event.preventDefault()
 
     try {
-      const dados = {
+          const dados = {
         nome: formulario.nome,
         descricao: formulario.descricao,
         quantidade: Number(formulario.quantidade),
         estoqueMinimo: Number(formulario.estoqueMinimo),
-        valorUnitario: Number(formulario.valorUnitario)
+        valorUnitario: Number(formulario.valorUnitario),
+        unidadeMedida: formulario.unidadeMedida
       }
 
       if (materialEditando) {
@@ -233,12 +238,11 @@ function Estoque() {
     })
   }
 
-  function formatarQuantidade(quantidade) {
-    return Number(quantidade || 0).toLocaleString('pt-BR', {
-      maximumFractionDigits: 2
-    })
-  }
-
+function formatarQuantidade(quantidade) {
+  return Number(quantidade || 0).toLocaleString('pt-BR', {
+    maximumFractionDigits: 3
+  })
+}
   function formatarData(data) {
     if (!data) return '-'
 
@@ -379,28 +383,29 @@ function Estoque() {
                     : 'Quantidade inicial'}
                 </label>
 
-                <input
-                  type="number"
-                  name="quantidade"
-                  value={formulario.quantidade}
-                  onChange={alterarCampo}
-                  min="0"
-                  required
-                  disabled={!!materialEditando}
-                />
+              <input
+                type="number"
+                name="quantidade"
+                value={formulario.quantidade}
+                onChange={alterarCampo}
+                min="0"
+                step={formulario.unidadeMedida === 'UN' ? '1' : '0.001'}
+                required
+              />
               </div>
 
               <div className="campo">
                 <label>Estoque mínimo</label>
 
-                <input
-                  type="number"
-                  name="estoqueMinimo"
-                  value={formulario.estoqueMinimo}
-                  onChange={alterarCampo}
-                  min="0"
-                  required
-                />
+                  <input
+                    type="number"
+                    name="estoqueMinimo"
+                    value={formulario.estoqueMinimo}
+                    onChange={alterarCampo}
+                    min="0"
+                    step={formulario.unidadeMedida === 'UN' ? '1' : '0.001'}
+                    required
+                  />
               </div>
 
               <div className="campo">
@@ -417,6 +422,25 @@ function Estoque() {
                   required
                 />
               </div>
+
+               <div className="campo">
+              <label>Unidade de medida</label>
+
+              <select
+                name="unidadeMedida"
+                value={formulario.unidadeMedida}
+                onChange={alterarCampo}
+                required
+              >
+                <option value="UN">Unidade (UN)</option>
+                <option value="M">Metro (M)</option>
+                <option value="M2">Metro quadrado (M²)</option>
+                <option value="M3">Metro cúbico (M³)</option>
+                <option value="KG">Quilograma (KG)</option>
+                <option value="L">Litro (L)</option>
+                <option value="MM">Milímetro (MM)</option>
+              </select>
+            </div>
 
             </div>
 
@@ -476,7 +500,7 @@ function Estoque() {
                       key={material.id}
                       value={material.id}
                     >
-                      {material.nome} — estoque: {material.quantidade}
+                      {material.nome} — estoque: {material.quantidade} {material.unidadeMedida}
                     </option>
                   ))}
                 </select>
@@ -497,15 +521,28 @@ function Estoque() {
               </div>
 
               <div className="campo">
-                <label>Quantidade</label>
+                <label>
+                  Quantidade
+                  {formularioMovimentacao.materialId && (
+                    ` (${encontrarMaterial(
+                      formularioMovimentacao.materialId
+                    )?.unidadeMedida || ''})`
+                  )}
+                </label>
 
                 <input
                   type="number"
                   name="quantidade"
                   value={formularioMovimentacao.quantidade}
                   onChange={alterarCampoMovimentacao}
-                  min="1"
-                  step="1"
+                  min="0.001"
+                  step={
+                    encontrarMaterial(formularioMovimentacao.materialId)
+                      ?.unidadeMedida === 'UN'
+                      ? '1'
+                      : '0.001'
+                  }
+                  placeholder="Informe a quantidade"
                   required
                 />
               </div>
