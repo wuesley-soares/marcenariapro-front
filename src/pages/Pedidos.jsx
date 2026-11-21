@@ -232,6 +232,22 @@ const pedidosFiltrados = pedidos.filter((pedido) => {
       : false)
   )
 })
+
+const orcamentosDisponiveis = orcamentos.filter((orcamento) => {
+  const aprovado = orcamento.status === 'APROVADO'
+
+  const jaPossuiPedido = pedidos.some(
+    (pedido) =>
+      Number(pedido.orcamentoId) === Number(orcamento.id)
+  )
+
+  const orcamentoAtual =
+    pedidoEditando &&
+    Number(pedidoEditando.orcamentoId) === Number(orcamento.id)
+
+  return orcamentoAtual || (aprovado && !jaPossuiPedido)
+})
+
   return (
     <div className="pedidos">
 
@@ -262,40 +278,46 @@ const pedidosFiltrados = pedidos.filter((pedido) => {
 
           <form onSubmit={salvarPedido}>
 
-            <div>
-              <label>Orçamento</label>
+            
+<div>
+  <label>Orçamento</label>
 
-              <select
-                name="orcamentoId"
-                value={formulario.orcamentoId}
-                onChange={alterarCampo}
-                required
-                disabled={!!pedidoEditando}
-              >
-                <option value="">
-                  Selecione um orçamento
-                </option>
+  <select
+    name="orcamentoId"
+    value={formulario.orcamentoId}
+    onChange={alterarCampo}
+    required
+    disabled={!!pedidoEditando}
+  >
+    <option value="">
+      Selecione um orçamento
+    </option>
 
-                {orcamentos
-                  .filter(
-                    (orcamento) =>
-                      orcamento.status === 'APROVADO' &&
-                      (!pedidoEditando ||
-                        Number(orcamento.id) ===
-                          Number(pedidoEditando.orcamentoId))
-                  )
-                  .map((orcamento) => (
-                    <option
-                      key={orcamento.id}
-                      value={orcamento.id}
-                    >
-                      {orcamento.projetoNome || 'Projeto'} -{' '}
-                      {orcamento.ambienteNome || 'Ambiente'} -{' '}
-                      R$ {Number(orcamento.valor).toFixed(2)}
-                    </option>
-                  ))}
-              </select>
-            </div>
+  {orcamentosDisponiveis.map((orcamento) => (
+  <option
+    key={orcamento.id}
+    value={orcamento.id}
+  >
+    {orcamento.projetoNome || 'Projeto'} -{' '}
+    {orcamento.ambienteNome || 'Ambiente'} -{' '}
+    R$ {Number(orcamento.valor).toFixed(2)}
+  </option>
+))}
+  </select>
+
+  {orcamentos.filter((orcamento) =>
+    orcamento.status === 'APROVADO' &&
+    !pedidos.some(
+      (pedido) =>
+        Number(pedido.orcamentoId) === Number(orcamento.id)
+    )
+  ).length === 0 && !pedidoEditando && (
+    <p className="aviso-pedido">
+      Não existem orçamentos aprovados disponíveis para criar um pedido.
+    </p>
+  )}
+</div>
+
 
 <div>
   <label>Status</label>
