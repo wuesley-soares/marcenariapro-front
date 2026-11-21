@@ -373,20 +373,23 @@
 }
 
 .producao .botao-tres-pontos {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
-  padding: 0;
-  border: 0;
+  border: none;
   border-radius: 7px;
   background: transparent;
   color: #4b5563;
   font-size: 26px;
   cursor: pointer;
-  opacity: 0;
-  visibility: hidden;
+  opacity: 1;
+  visibility: visible;
+}
+
+.producao .botao-tres-pontos:hover {
+  background: #e9eef7;
 }
 
 .producao tr:hover .botao-tres-pontos,
@@ -394,10 +397,6 @@
 .producao .botao-tres-pontos[aria-expanded="true"] {
   opacity: 1;
   visibility: visible;
-}
-
-.producao .botao-tres-pontos:hover {
-  background: #e9eef7;
 }
 
 .producao .menu-dropdown-linha {
@@ -502,5 +501,147 @@
 
   .producao .acoes {
     flex-wrap: nowrap;
+  }
+}
+
+
+/* Modal de materiais da produção */
+
+.producao .modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.producao .modal-card {
+  width: min(760px, 100%);
+  max-width: 100%;
+  max-height: 90vh;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 28px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.producao .modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 18px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.producao .modal-header h2 {
+  margin: 0 0 6px;
+  font-size: 21px;
+  color: #1f2937;
+}
+
+.producao .modal-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.producao .material-form {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 28px;
+}
+
+.producao .material-form > div {
+  min-width: 0;
+}
+
+.producao .material-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.producao .material-form select,
+.producao .material-form input {
+  display: block;
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: white;
+  font-size: 14px;
+}
+
+.producao .material-form select:focus,
+.producao .material-form input:focus {
+  outline: none;
+  border-color: #2f6fed;
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.1);
+}
+
+.producao .material-form .botao-novo {
+  height: 42px;
+  white-space: nowrap;
+}
+
+.producao .materiais-lista {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.producao .materiais-lista h3 {
+  margin: 0 0 14px;
+  font-size: 16px;
+}
+
+.producao .materiais-lista table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+.producao .materiais-lista th,
+.producao .materiais-lista td {
+  padding: 13px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+}
+
+.producao .materiais-lista th {
+  background: #f8fafc;
+  color: #374151;
+}
+
+.producao .materiais-lista td:first-child {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  .producao .modal-card {
+    padding: 20px;
+  }
+
+  .producao .material-form {
+    grid-template-columns: 1fr;
+  }
+
+  .producao .material-form .botao-novo {
+    width: 100%;
   }
 }

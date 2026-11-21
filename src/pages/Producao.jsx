@@ -55,7 +55,18 @@ function Producao() {
       console.error(error)
       alert('Erro ao carregar os dados.')
     }
+
+    console.table(
+  pedidosResponse.data.map((pedido) => ({
+    id: pedido.id,
+    status: pedido.status
+  }))
+)
   }
+
+  function alternarMenu(id) {
+  setMenuAberto((atual) => atual === id ? null : id)
+}
 
   function abrirNovo() {
     setProducaoEditando(null)
@@ -315,6 +326,36 @@ function Producao() {
     )
   })
 
+  const pedidosDisponiveis = pedidos.filter((pedido) => {
+  const aprovado = pedido.status === 'APROVADO'
+
+  const jaPossuiProducao = producoes.some(
+    (producao) =>
+      Number(producao.pedidoId) === Number(pedido.id)
+  )
+
+  const pedidoAtual =
+    producaoEditando &&
+    Number(form.pedidoId) === Number(pedido.id)
+
+  return pedidoAtual || (aprovado && !jaPossuiProducao)
+})
+
+const materialSelecionado = materiais.find(
+  (material) =>
+    Number(material.id) === Number(formMaterial.materialId)
+)
+
+const unidadeSelecionada =
+  materialSelecionado?.unidadeMedida || ''
+
+function unidadeDoItem(item) {
+  const material = materiais.find(
+    (m) => Number(m.id) === Number(item.materialId)
+  )
+
+  return material?.unidadeMedida || ''
+}
   return (
     <div className="producao">
 
@@ -364,22 +405,11 @@ function Producao() {
                   Selecione um pedido
                 </option>
 
-                      {pedidos
-                      .filter((pedido) =>
-                        pedido.status === 'APROVADO' ||
-                        (
-                          producaoEditando &&
-                          Number(pedido.id) === Number(form.pedidoId)
-                        )
-                      )
-                      .map((pedido) =>  (
-                    <option
-                      key={pedido.id}
-                      value={pedido.id}
-                    >
-                      Pedido #{pedido.id} - {nomeProjetoAmbiente(pedido.id)}
-                    </option>
-                  ))}
+                      {pedidosDisponiveis.map((pedido) => (
+  <option key={pedido.id} value={pedido.id}>
+    Pedido #{pedido.id} - {nomeProjetoAmbiente(pedido.id)}
+  </option>
+))}
               </select>
             </div>
 
@@ -625,8 +655,8 @@ function Producao() {
 
                   <input
                     type="number"
-                    min="0.001"
-                    step="0.001"
+                   min={unidadeSelecionada === 'UN' ? '1' : '0.001'}
+                  step={unidadeSelecionada === 'UN' ? '1' : '0.001'}
                     placeholder="Ex.: 2.500"
                     value={formMaterial.quantidade}
                     onChange={(e) =>
@@ -679,7 +709,7 @@ function Producao() {
                         </td>
 
                         <td>
-                          {item.quantidade}
+                          {item.quantidade} {unidadeDoItem(item)}
                         </td>
 
                         <td>
