@@ -814,3 +814,30 @@
 .modal-historico table {
   min-width: 650px;
 }
+
+
+/* Botão para mostrar ou ocultar pedidos pagos */
+
+.botao-toggle-pagos {
+  padding: 10px 14px;
+  border: 1px solid #dce1e8;
+  border-radius: 7px;
+  background: #f8f9fb;
+  color: #2f6fed;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.botao-toggle-pagos:hover {
+  background: #edf3ff;
+  border-color: #2f6fed;
+}
+
+/* Posicionamento do formulário ao rolar a página */
+
+.pagamento-formulario {
+  scroll-margin-top: 25px;
+}

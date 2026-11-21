@@ -4,6 +4,7 @@ import api from '../services/api'
 import './Producao.css'
 
 function Producao() {
+  const [menuAberto, setMenuAberto] = useState(null)
   const [producoes, setProducoes] = useState([])
   const [pedidos, setPedidos] = useState([])
   const [materiais, setMateriais] = useState([])
@@ -363,13 +364,15 @@ function Producao() {
                   Selecione um pedido
                 </option>
 
-                {pedidos
-                  .filter(
-                    (pedido) =>
-                      pedido.status !== 'ENTREGUE' &&
-                      pedido.status !== 'CANCELADO'
-                  )
-                  .map((pedido) => (
+                      {pedidos
+                      .filter((pedido) =>
+                        pedido.status === 'APROVADO' ||
+                        (
+                          producaoEditando &&
+                          Number(pedido.id) === Number(form.pedidoId)
+                        )
+                      )
+                      .map((pedido) =>  (
                     <option
                       key={pedido.id}
                       value={pedido.id}
@@ -488,37 +491,66 @@ function Producao() {
                     {nomeProjetoAmbiente(producao.pedidoId)}
                   </td>
 
-                  <td>
+                <td>
+                  <span className={`status-producao status-${producao.status.toLowerCase()}`}>
                     {traduzirStatus(producao.status)}
-                  </td>
+                  </span>
+                </td>
 
                   <td>
                     {formatarData(producao.dataCriacao)}
                   </td>
 
                   <td>
-                    <div className="acoes">
-                      <button
-                        className="botao-materiais"
-                        onClick={() => abrirMateriais(producao)}
-                      >
-                        Materiais
-                      </button>
+                   
+                    
+                      <div className="acoes">
+                        <button
+                          type="button"
+                          className="botao-materiais"
+                          onClick={() => abrirMateriais(producao)}
+                        >
+                          Materiais
+                        </button>
 
-                      <button
-                        className="botao-editar"
-                        onClick={() => editar(producao)}
-                      >
-                        Editar
-                      </button>
+                        <div className="menu-acoes-linha">
+                          <button
+                            type="button"
+                            className="botao-tres-pontos"
+                            aria-label={`Mais opções para produção ${producao.id}`}
+                            aria-expanded={menuAberto === producao.id}
+                            onClick={() => alternarMenu(producao.id)}
+                          >
+                            ⋮
+                          </button>
 
-                      <button
-                        className="botao-excluir"
-                        onClick={() => excluir(producao.id)}
-                      >
-                        Excluir
-                      </button>
-                    </div>
+                          {menuAberto === producao.id && (
+                            <div className="menu-dropdown-linha">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setMenuAberto(null)
+                                  editar(producao)
+                                }}
+                              >
+                                <span>✎</span> Editar
+                              </button>
+
+                              <button
+                                type="button"
+                                className="opcao-excluir"
+                                onClick={() => {
+                                  setMenuAberto(null)
+                                  excluir(producao.id)
+                                }}
+                              >
+                                <span>🗑️</span> Excluir
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                   </td>
                 </tr>
               ))

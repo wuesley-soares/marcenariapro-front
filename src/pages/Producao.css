@@ -318,3 +318,189 @@
     max-width: 100%;
   }
 }
+
+
+/* =========================
+   PADRÃO VISUAL DA PRODUÇÃO
+========================= */
+
+.producao {
+  padding: 30px;
+  background: #f5f6f8;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.producao-header h1 {
+  font-size: 28px;
+  font-weight: 400;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.producao-header p {
+  font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.producao-formulario,
+.producao-tabela {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.producao-formulario input:focus,
+.producao-formulario select:focus {
+  outline: none;
+  border-color: #2f6fed;
+  box-shadow: 0 0 0 2px rgba(47, 111, 237, 0.1);
+}
+
+/* =========================
+   MENU DE AÇÕES - 3 PONTOS
+========================= */
+
+.producao .acoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.producao .menu-acoes-linha {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.producao .botao-tres-pontos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #4b5563;
+  font-size: 26px;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.producao tr:hover .botao-tres-pontos,
+.producao tr:focus-within .botao-tres-pontos,
+.producao .botao-tres-pontos[aria-expanded="true"] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.producao .botao-tres-pontos:hover {
+  background: #e9eef7;
+}
+
+.producao .menu-dropdown-linha {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 3000;
+  width: 155px;
+  padding: 6px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.13);
+}
+
+.producao .menu-dropdown-linha button {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #333;
+  text-align: left;
+  cursor: pointer;
+}
+
+.producao .menu-dropdown-linha button:hover {
+  background: #f3f4f6;
+}
+
+.producao .menu-dropdown-linha .opcao-excluir {
+  color: #dc2626;
+}
+
+/* =========================
+   STATUS DA PRODUÇÃO
+========================= */
+
+.status-producao {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-aguardando {
+  background: #fff7d6;
+  color: #946c00;
+}
+
+.status-em_producao {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-pronto {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-entregue {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.status-cancelado {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* =========================
+   RESPONSIVIDADE
+========================= */
+
+.producao .producao-tabela {
+  overflow-x: auto;
+}
+
+.producao .producao-tabela table {
+  min-width: 750px;
+}
+
+@media (max-width: 700px) {
+  .producao {
+    padding: 20px;
+  }
+
+  .producao-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .producao .botao-tres-pontos {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .producao .acoes {
+    flex-wrap: nowrap;
+  }
+}

@@ -1,13 +1,17 @@
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import api from '../services/api'
 import './Pagamentos.css'
 
 function Pagamentos() {
+
+  
   const [pagamentos, setPagamentos] = useState([])
   const [pedidos, setPedidos] = useState([])
   const [orcamentos, setOrcamentos] = useState([])
   const [resumos, setResumos] = useState({})
+  const formularioRef = useRef(null)
+const [mostrarPagos, setMostrarPagos] = useState(false)
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [pedidoSelecionado, setPedidoSelecionado] = useState(null)
@@ -26,6 +30,15 @@ function Pagamentos() {
   useEffect(() => {
     carregarDados()
   }, [])
+
+  useEffect(() => {
+  if (mostrarFormulario && formularioRef.current) {
+    formularioRef.current.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    })
+  }
+}, [mostrarFormulario])
 
   async function carregarDados() {
     try {
@@ -322,7 +335,9 @@ function cancelarFormulario() {
     0
   )
 
-  const pedidosFiltrados = pedidosComResumo.filter((pedido) => {
+
+const pedidosFiltrados = pedidosComResumo
+  .filter((pedido) => {
     const resumo = encontrarResumo(pedido.id)
     const nome = nomeProjetoAmbiente(pedido.id)
     const situacao = resumo?.situacao || ''
@@ -340,8 +355,32 @@ function cancelarFormulario() {
       filtroStatus === 'TODOS' ||
       situacao === filtroStatus
 
-    return correspondePesquisa && correspondeStatus
+    // Oculta pedidos pagos, exceto quando o usuário escolher mostrar.
+    const correspondeVisibilidade =
+      mostrarPagos || situacao !== 'PAGO'
+
+    return (
+      correspondePesquisa &&
+      correspondeStatus &&
+      correspondeVisibilidade
+    )
   })
+  .sort((a, b) => {
+    const prioridade = {
+      PARCIALMENTE_PAGO: 1,
+      PENDENTE: 2,
+      PAGO: 3
+    }
+
+    const situacaoA = encontrarResumo(a.id)?.situacao
+    const situacaoB = encontrarResumo(b.id)?.situacao
+
+    return (
+      (prioridade[situacaoA] || 4) -
+      (prioridade[situacaoB] || 4)
+    )
+  })
+
 
   function abrirDetalhes(pedido) {
     setPedidoSelecionado(pedido)
@@ -409,8 +448,11 @@ function cancelarFormulario() {
 
       </div>
 
-      {mostrarFormulario && (
-        <div className="pagamento-formulario">
+           {mostrarFormulario && (
+              <div
+                className="pagamento-formulario"
+                ref={formularioRef}
+              >
 
           <div className="formulario-header">
             <div>
@@ -606,6 +648,14 @@ function cancelarFormulario() {
               </option>
               <option value="PENDENTE">Pendente</option>
             </select>
+
+             <button
+              type="button"
+              className="botao-toggle-pagos"
+              onClick={() => setMostrarPagos(!mostrarPagos)}
+            >
+              {mostrarPagos ? 'Ocultar pagos' : 'Mostrar pagos'}
+            </button>
 
           </div>
         </div>
