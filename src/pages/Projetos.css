@@ -516,3 +516,15 @@
     padding: 25px 15px;
   }
 }
+
+.projetos-tabela td:last-child {
+  text-align: right;
+}
+
+.projetos-tabela .acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
