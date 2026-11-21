@@ -5,6 +5,12 @@ import './Pedidos.css'
 function Pedidos() {
   const [pedidos, setPedidos] = useState([])
   const [orcamentos, setOrcamentos] = useState([])
+  const [menuAberto, setMenuAberto] = useState(null)
+
+const [posicaoMenu, setPosicaoMenu] = useState({
+  top: 0,
+  left: 0
+})
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [pedidoEditando, setPedidoEditando] = useState(null)
@@ -43,6 +49,34 @@ const [formulario, setFormulario] = useState({
       [name]: value
     })
   }
+
+function alternarMenu(event, id) {
+  if (menuAberto === id) {
+    setMenuAberto(null)
+    return
+  }
+
+  const rect = event.currentTarget.getBoundingClientRect()
+
+  const larguraMenu = 155
+  const alturaMenu = 105
+
+  let top = rect.bottom + 6
+
+  if (top + alturaMenu > window.innerHeight - 10) {
+    top = rect.top - alturaMenu - 6
+  }
+
+  let left = rect.right - larguraMenu
+
+  left = Math.max(
+    10,
+    Math.min(left, window.innerWidth - larguraMenu - 10)
+  )
+
+  setPosicaoMenu({ top, left })
+  setMenuAberto(id)
+}
 
   function novoPedido() {
     setPedidoEditando(null)
@@ -162,6 +196,25 @@ setFormulario({
 
     default:
       return status
+  }
+}
+
+function classeStatus(status) {
+  switch (status) {
+    case 'PENDENTE':
+      return 'status-pendente'
+
+    case 'APROVADO':
+      return 'status-aprovado'
+
+    case 'ENTREGUE':
+      return 'status-entregue'
+
+    case 'CANCELADO':
+      return 'status-cancelado'
+
+    default:
+      return ''
   }
 }
 
@@ -388,7 +441,11 @@ const pedidosFiltrados = pedidos.filter((pedido) => {
                     : '-'}
                 </td>
 
-                <td>{textoStatus(pedido.status)}</td>
+                <td>
+                    <span className={`pedido-status ${classeStatus(pedido.status)}`}>
+                      {textoStatus(pedido.status)}
+                    </span>
+                  </td>
 
                 <td>
                   {pedido.dataCriacao
@@ -406,23 +463,54 @@ const pedidosFiltrados = pedidos.filter((pedido) => {
                     : '-'}
                 </td>
 
-                <td>
-                  <div className="acoes">
-                    <button
-                      className="botao-editar"
-                      onClick={() => editarPedido(pedido)}
-                    >
-                      Editar
-                    </button>
+                
+<td>
+  <div className="acoes">
+    <button
+      type="button"
+      className="botao-tres-pontos-pedido"
+      aria-label={`Mais opções do pedido ${pedido.id}`}
+      aria-expanded={menuAberto === pedido.id}
+      onClick={(event) => alternarMenu(event, pedido.id)}
+    >
+      ⋮
+    </button>
 
-                    <button
-                      className="botao-excluir"
-                      onClick={() => excluirPedido(pedido.id)}
-                    >
-                      Excluir
-                    </button>
-                  </div>
-                </td>
+    {menuAberto === pedido.id && (
+      <div
+        className="menu-dropdown-pedido"
+        style={{
+          top: `${posicaoMenu.top}px`,
+          left: `${posicaoMenu.left}px`
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setMenuAberto(null)
+            editarPedido(pedido)
+          }}
+        >
+          <span>✎</span>
+          Editar
+        </button>
+
+        <button
+          type="button"
+          className="opcao-excluir"
+          onClick={() => {
+            setMenuAberto(null)
+            excluirPedido(pedido.id)
+          }}
+        >
+          <span>🗑</span>
+          Excluir
+        </button>
+      </div>
+    )}
+  </div>
+</td>
+
               </tr>
             )
           })}

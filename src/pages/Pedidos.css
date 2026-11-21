@@ -198,3 +198,165 @@
     max-width: 100%;
   }
 }
+
+
+/* =========================
+   STATUS DOS PEDIDOS
+========================= */
+
+.pedidos .pedido-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pedidos .status-pendente {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.pedidos .status-aprovado {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.pedidos .status-entregue {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.pedidos .status-cancelado {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* =========================
+   BOTÃO TRÊS PONTOS
+========================= */
+
+.pedidos .acoes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pedidos .botao-tres-pontos-pedido {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 37px;
+  height: 37px;
+  padding: 0;
+  border: 1px solid #dce1e8;
+  border-radius: 8px;
+  background: transparent;
+  color: #374151;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.pedidos tbody tr:hover .botao-tres-pontos-pedido,
+.pedidos tbody tr:focus-within .botao-tres-pontos-pedido,
+.pedidos .botao-tres-pontos-pedido[aria-expanded="true"] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.pedidos .botao-tres-pontos-pedido:hover {
+  background: #eef2f7;
+}
+
+/* =========================
+   MENU FLUTUANTE
+========================= */
+
+.pedidos .menu-dropdown-pedido {
+  position: fixed;
+  width: 155px;
+  padding: 6px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  z-index: 99999;
+}
+
+.pedidos .menu-dropdown-pedido button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #374151;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pedidos .menu-dropdown-pedido button:hover {
+  background: #f3f4f6;
+}
+
+.pedidos .menu-dropdown-pedido .opcao-excluir {
+  color: #dc2626;
+}
+
+/* =========================
+   TABELA
+========================= */
+
+.pedidos .pedidos-tabela {
+  overflow: visible;
+}
+
+.pedidos .tabela-container {
+  overflow-x: auto;
+}
+
+.pedidos .pedidos-tabela table {
+  min-width: 850px;
+}
+
+.pedidos .pedidos-tabela tbody tr:hover {
+  background: #f0f5ff;
+}
+
+.pedidos .pedidos-tabela th {
+  background: #f7f8fa;
+  color: #374151;
+  font-weight: 600;
+}
+
+.pedidos .pedidos-tabela td,
+.pedidos .pedidos-tabela th {
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+
+/* =========================
+   RESPONSIVIDADE
+========================= */
+
+@media (max-width: 700px) {
+  .pedidos .botao-tres-pontos-pedido {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .pedidos-header {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+}
