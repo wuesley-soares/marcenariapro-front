@@ -20,9 +20,40 @@ function Orcamentos() {
   const [mostrarMaterial, setMostrarMaterial] = useState(false)
   const [menuAberto, setMenuAberto] = useState(null)
 
-  function alternarMenu(id) {
-    setMenuAberto((atual) => atual === id ? null : id)
+const [posicaoMenu, setPosicaoMenu] = useState({
+  top: 0,
+  left: 0
+})
+
+function alternarMenu(event, id) {
+  if (menuAberto === id) {
+    setMenuAberto(null)
+    return
   }
+
+  const rect = event.currentTarget.getBoundingClientRect()
+
+  const alturaMenu = 180
+  const larguraMenu = 155
+
+  let top = rect.bottom + 6
+
+  // Se não houver espaço abaixo, abre acima.
+  if (top + alturaMenu > window.innerHeight - 10) {
+    top = rect.top - alturaMenu - 6
+  }
+
+  let left = rect.right - larguraMenu
+
+  // Evita que o menu ultrapasse as laterais da tela.
+  left = Math.max(
+    10,
+    Math.min(left, window.innerWidth - larguraMenu - 10)
+  )
+
+  setPosicaoMenu({ top, left })
+  setMenuAberto(id)
+}
 
   const [ambienteSelecionado, setAmbienteSelecionado] = useState(
     ambienteId || ''
@@ -37,11 +68,10 @@ function Orcamentos() {
   })
 
   const [materialFormulario, setMaterialFormulario] = useState({
-    materialId: '',
-    quantidade: '',
-    unidade: 'un',
-    valorUnitario: ''
-  })
+  materialId: '',
+  quantidade: '',
+  valorUnitario: ''
+})
 
   useEffect(() => {
     carregarOrcamentos()
@@ -337,34 +367,34 @@ async function alterarStatusOrcamento(orcamento, novoStatus) {
     }
   }
 
-  function abrirAdicionarMaterial() {
-    carregarMateriais()
+function abrirAdicionarMaterial() {
+  carregarMateriais()
 
-    setMaterialFormulario({
-      materialId: '',
-      quantidade: '',
-      unidade: 'un',
-      valorUnitario: ''
-    })
+  setMaterialFormulario({
+    materialId: '',
+    quantidade: '',
+    valorUnitario: ''
+  })
 
-    setMostrarMaterial(true)
-  }
+  setMostrarMaterial(true)
+}
 
-  function selecionarMaterial(event) {
-    const materialId = event.target.value
+ function selecionarMaterial(event) {
+  const materialId = event.target.value
 
-    const material = materiais.find(
-      (item) => Number(item.id) === Number(materialId)
-    )
+  const material = materiais.find(
+    (item) => Number(item.id) === Number(materialId)
+  )
 
-    setMaterialFormulario((anterior) => ({
-      ...anterior,
-      materialId,
-      valorUnitario: material
-        ? material.valorUnitario
-        : ''
-    }))
-  }
+  setMaterialFormulario((anterior) => ({
+    ...anterior,
+    materialId,
+    quantidade: '',
+    valorUnitario: material
+      ? material.valorUnitario
+      : ''
+  }))
+}
 
   function alterarMaterialCampo(event) {
     const { name, value } = event.target
@@ -381,12 +411,19 @@ async function alterarStatusOrcamento(orcamento, novoStatus) {
     if (!orcamentoSelecionado) return
 
     try {
-      const dados = {
-        quantidade: Number(materialFormulario.quantidade),
-        unidade: materialFormulario.unidade,
-        valorUnitario: Number(materialFormulario.valorUnitario),
-        materialId: Number(materialFormulario.materialId)
-      }
+const material = obterMaterialSelecionado()
+
+              if (!material) {
+                alert('Selecione um material.')
+                return
+              }
+
+              const dados = {
+                quantidade: Number(materialFormulario.quantidade),
+                unidade: material.unidadeMedida,
+                valorUnitario: Number(materialFormulario.valorUnitario),
+                materialId: Number(materialFormulario.materialId)
+              }
 
       await api.post(
         `/orcamentos/${orcamentoSelecionado.id}/materiais`,
@@ -514,6 +551,26 @@ function obterMaterialSelecionado() {
   return materiais.find(
     (item) => Number(item.id) === Number(materialFormulario.materialId)
   )
+}
+
+function obterUnidadeSelecionada() {
+  const material = obterMaterialSelecionado()
+
+  return material?.unidadeMedida || ''
+}
+
+function formatarUnidade(unidade) {
+  const unidades = {
+    UN: 'Unidade',
+    M: 'Metro',
+    M2: 'm²',
+    M3: 'm³',
+    KG: 'Kg',
+    L: 'Litro',
+    MM: 'Milímetro'
+  }
+
+  return unidades[unidade] || unidade || '-'
 }
 
   const ambientesDisponiveis = ambientes.filter((ambiente) => {
@@ -824,35 +881,30 @@ function obterMaterialSelecionado() {
                   </div>
 
                   <div>
-                    <label>Quantidade</label>
+                        <label>Quantidade</label>
 
-                    <input
-                      type="number"
-                      name="quantidade"
-                      value={materialFormulario.quantidade}
-                      onChange={alterarMaterialCampo}
-                      min="0.01"
-                      step="0.01"
-                      required
-                    />
-                  </div>
+                        <input
+                          type="number"
+                          name="quantidade"
+                          value={materialFormulario.quantidade}
+                          onChange={alterarMaterialCampo}
+                          min={obterUnidadeSelecionada() === 'UN' ? '1' : '0.001'}
+                          step={obterUnidadeSelecionada() === 'UN' ? '1' : '0.001'}
+                          placeholder="Informe a quantidade"
+                          required
+                        />
+                      </div>
 
-                  <div>
-                    <label>Unidade</label>
+                 <div>
+                      <label>Unidade</label>
 
-                    <select
-                      name="unidade"
-                      value={materialFormulario.unidade}
-                      onChange={alterarMaterialCampo}
-                    >
-                      <option value="un">Unidade</option>
-                      <option value="m">Metro</option>
-                      <option value="m²">m²</option>
-                      <option value="m³">m³</option>
-                      <option value="kg">Kg</option>
-                      <option value="L">Litro</option>
-                    </select>
-                  </div>
+                      <input
+                        type="text"
+                        value={formatarUnidade(obterUnidadeSelecionada())}
+                        placeholder="Automática"
+                        disabled
+                      />
+                        </div>
 
                   <div>
                     <label>Valor unitário</label>
@@ -918,7 +970,7 @@ function obterMaterialSelecionado() {
                           )}
                         </td>
                         <td>{item.quantidade}</td>
-                        <td>{item.unidade || '-'}</td>
+                        <td>{formatarUnidade(item.unidade)}</td>
                         <td>{formatarValor(item.valorUnitario)}</td>
                         <td>
                           <strong>{formatarValor(item.subtotal)}</strong>
@@ -1114,13 +1166,20 @@ function obterMaterialSelecionado() {
         className="botao-tres-pontos"
         aria-label={`Mais opções para orçamento ${orcamento.id}`}
         aria-expanded={menuAberto === orcamento.id}
-        onClick={() => alternarMenu(orcamento.id)}
+        onClick={(event) => alternarMenu(event, orcamento.id)}
       >
         ⋮
       </button>
 
-      {menuAberto === orcamento.id && (
-        <div className="menu-dropdown-linha">
+              {menuAberto === orcamento.id && (
+            <div
+              className="menu-dropdown-linha"
+              style={{
+                position: 'fixed',
+                top: `${posicaoMenu.top}px`,
+                left: `${posicaoMenu.left}px`
+              }}
+            >
           <button type="button" onClick={() => { setMenuAberto(null); abrirOrcamento(orcamento) }}>
             <span>✎</span> Editar
           </button>

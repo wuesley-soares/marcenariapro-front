@@ -389,7 +389,7 @@
 }
 .material-formulario form {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr;
   gap: 15px;
   align-items: end;
 }
@@ -843,16 +843,14 @@
 }
 
 .orcamentos .menu-dropdown-linha {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 300;
+  position: fixed;
   width: 155px;
   padding: 6px;
-  background: white;
+  background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 9px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.13);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  z-index: 99999;
 }
 
 .orcamentos .menu-dropdown-linha button {
