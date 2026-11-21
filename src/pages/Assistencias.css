@@ -850,3 +850,115 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+/* =========================
+   AÇÕES E MENU DE OPÇÕES
+========================= */
+
+.assistencias .acoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.assistencias .botao-tres-pontos-assistencia {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 37px;
+  height: 37px;
+  padding: 0;
+  border: 1px solid #dce1e8;
+  border-radius: 8px;
+  background: transparent;
+  color: #374151;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.assistencias tbody tr:hover .botao-tres-pontos-assistencia,
+.assistencias tbody tr:focus-within .botao-tres-pontos-assistencia,
+.assistencias .botao-tres-pontos-assistencia[aria-expanded="true"] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.assistencias .botao-tres-pontos-assistencia:hover {
+  background: #eef2f7;
+}
+
+/* Menu flutuante sobre a tabela */
+
+.assistencias .menu-dropdown-assistencia {
+  position: fixed;
+  width: 155px;
+  padding: 6px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  z-index: 99999;
+}
+
+.assistencias .menu-dropdown-assistencia button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #374151;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.assistencias .menu-dropdown-assistencia button:hover {
+  background: #f3f4f6;
+}
+
+.assistencias .menu-dropdown-assistencia .opcao-excluir {
+  color: #dc2626;
+}
+
+/* Tabela */
+
+.assistencias .assistencias-tabela {
+  overflow-x: auto;
+}
+
+.assistencias .assistencias-tabela table {
+  min-width: 950px;
+}
+
+.assistencias .assistencias-tabela tbody tr:hover {
+  background-color: #f0f5ff;
+}
+
+/* Status */
+
+.assistencias .status {
+  white-space: nowrap;
+}
+
+/* Responsividade */
+
+@media (max-width: 700px) {
+  .assistencias .botao-tres-pontos-assistencia {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .assistencias .acoes {
+    flex-wrap: nowrap;
+  }
+}

@@ -24,6 +24,13 @@ const [carregandoImagens, setCarregandoImagens] = useState(false)
 
   const [itensMateriais, setItensMateriais] = useState([])
 
+  const [menuAberto, setMenuAberto] = useState(null)
+
+const [posicaoMenu, setPosicaoMenu] = useState({
+  top: 0,
+  left: 0
+})
+
   const [formulario, setFormulario] = useState({
     dataSolicitacao: '',
     dataAgendamento: '',
@@ -95,6 +102,36 @@ const [carregandoImagens, setCarregandoImagens] = useState(false)
       [name]: value
     })
   }
+
+
+function alternarMenu(event, id) {
+  if (menuAberto === id) {
+    setMenuAberto(null)
+    return
+  }
+
+  const rect = event.currentTarget.getBoundingClientRect()
+
+  const larguraMenu = 155
+  const alturaMenu = 105
+
+  let top = rect.bottom + 6
+
+  if (top + alturaMenu > window.innerHeight - 10) {
+    top = rect.top - alturaMenu - 6
+  }
+
+  let left = rect.right - larguraMenu
+
+  left = Math.max(
+    10,
+    Math.min(left, window.innerWidth - larguraMenu - 10)
+  )
+
+  setPosicaoMenu({ top, left })
+  setMenuAberto(id)
+}
+
 
   function novaAssistencia() {
     setAssistenciaEditando(null)
@@ -904,42 +941,64 @@ function formatarMoeda(valor) {
 
                   <td>
 
-                    <div className="acoes">
+                   
+<div className="acoes">
+  <button
+    type="button"
+    className="botao-materiais"
+    onClick={() => {
+      setMenuAberto(null)
+      abrirMateriais(assistencia)
+    }}
+  >
+    Materiais
+  </button>
 
-                      <button
-                        className="botao-materiais"
-                        onClick={() =>
-                          abrirMateriais(
-                            assistencia
-                          )
-                        }
-                      >
-                        Materiais
-                      </button>
+  <button
+    type="button"
+    className="botao-tres-pontos-assistencia"
+    aria-label={`Mais opções da assistência ${assistencia.id}`}
+    aria-expanded={menuAberto === assistencia.id}
+    onClick={(event) =>
+      alternarMenu(event, assistencia.id)
+    }
+  >
+    ⋮
+  </button>
 
-                      <button
-                        className="botao-editar"
-                        onClick={() =>
-                          editarAssistencia(
-                            assistencia
-                          )
-                        }
-                      >
-                        Editar
-                      </button>
+  {menuAberto === assistencia.id && (
+    <div
+      className="menu-dropdown-assistencia"
+      style={{
+        top: `${posicaoMenu.top}px`,
+        left: `${posicaoMenu.left}px`
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => {
+          setMenuAberto(null)
+          editarAssistencia(assistencia)
+        }}
+      >
+        <span>✎</span>
+        Editar
+      </button>
 
-                      <button
-                        className="botao-excluir"
-                        onClick={() =>
-                          excluirAssistencia(
-                            assistencia.id
-                          )
-                        }
-                      >
-                        Excluir
-                      </button>
-
-                    </div>
+      <button
+        type="button"
+        className="opcao-excluir"
+        onClick={() => {
+          setMenuAberto(null)
+          excluirAssistencia(assistencia.id)
+        }}
+      >
+        <span>🗑</span>
+        Excluir
+      </button>
+    </div>
+  )}
+</div>
 
                   </td>
 
