@@ -535,7 +535,12 @@ function formatarQuantidade(quantidade) {
                   name="quantidade"
                   value={formularioMovimentacao.quantidade}
                   onChange={alterarCampoMovimentacao}
-                  min="0.001"
+                  min={
+                      encontrarMaterial(formularioMovimentacao.materialId)
+                        ?.unidadeMedida === 'UN'
+                        ? '1'
+                        : '0.001'
+                    }
                   step={
                     encontrarMaterial(formularioMovimentacao.materialId)
                       ?.unidadeMedida === 'UN'
