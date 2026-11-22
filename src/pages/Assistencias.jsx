@@ -6,7 +6,6 @@ function Assistencias() {
   const [assistencias, setAssistencias] = useState([])
   const [clientes, setClientes] = useState([])
   const [pedidos, setPedidos] = useState([])
-  const [usuarios, setUsuarios] = useState([])
   const [materiais, setMateriais] = useState([])
   const [imagens, setImagens] = useState([])
 const [arquivoImagem, setArquivoImagem] = useState(null)
@@ -40,8 +39,7 @@ const [posicaoMenu, setPosicaoMenu] = useState({
     valorMateriais: '',
     status: 'ABERTA',
     clienteId: '',
-    pedidoId: '',
-    funcionarioId: ''
+    pedidoId: ''
   })
 
   const [materialFormulario, setMaterialFormulario] = useState({
@@ -59,20 +57,17 @@ const [posicaoMenu, setPosicaoMenu] = useState({
         respostaAssistencias,
         respostaClientes,
         respostaPedidos,
-        respostaUsuarios,
         respostaMateriais
       ] = await Promise.all([
         api.get('/assistencias-tecnicas'),
         api.get('/clientes'),
         api.get('/pedidos'),
-        api.get('/usuarios'),
         api.get('/materiais')
       ])
 
       setAssistencias(respostaAssistencias.data)
       setClientes(respostaClientes.data)
       setPedidos(respostaPedidos.data)
-      setUsuarios(respostaUsuarios.data)
       setMateriais(respostaMateriais.data)
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
@@ -147,8 +142,7 @@ function alternarMenu(event, id) {
       valorMateriais: '',
       status: 'ABERTA',
       clienteId: '',
-      pedidoId: '',
-      funcionarioId: ''
+      pedidoId: ''
     })
 
     setMostrarFormulario(true)
@@ -185,10 +179,7 @@ function alternarMenu(event, id) {
         assistencia.clienteId || '',
 
       pedidoId:
-        assistencia.pedidoId || '',
-
-      funcionarioId:
-        assistencia.funcionarioId || ''
+        assistencia.pedidoId || ''
     })
 
     setMostrarFormulario(true)
@@ -207,8 +198,7 @@ function alternarMenu(event, id) {
       valorMateriais: '',
       status: 'ABERTA',
       clienteId: '',
-      pedidoId: '',
-      funcionarioId: ''
+      pedidoId: ''
     })
   }
 
@@ -239,12 +229,9 @@ function alternarMenu(event, id) {
         clienteId:
           Number(formulario.clienteId),
 
-       pedidoId: formulario.pedidoId
-        ? Number(formulario.pedidoId)
-        : null,
-
-        funcionarioId:
-          Number(formulario.funcionarioId)
+        pedidoId: formulario.pedidoId
+          ? Number(formulario.pedidoId)
+          : null
       }
 
       if (assistenciaEditando) {
@@ -598,13 +585,6 @@ setEtapaImagem('PROBLEMA')
     )
   }
 
-  function encontrarFuncionario(id) {
-    return usuarios.find(
-      usuario =>
-        Number(usuario.id) === Number(id)
-    )
-  }
-
   function encontrarMaterial(id) {
     return materiais.find(
       material =>
@@ -721,30 +701,6 @@ function formatarMoeda(valor) {
                       value={pedido.id}
                     >
                       Pedido #{pedido.id}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label>Funcionário</label>
-
-                <select
-                  name="funcionarioId"
-                  value={formulario.funcionarioId}
-                  onChange={alterarCampo}
-                  required
-                >
-                  <option value="">
-                    Selecione um funcionário
-                  </option>
-
-                  {usuarios.map(usuario => (
-                    <option
-                      key={usuario.id}
-                      value={usuario.id}
-                    >
-                      {usuario.nome || usuario.email}
                     </option>
                   ))}
                 </select>
